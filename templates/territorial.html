@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}{{ dim.nombre }}{% endblock %}
+{% block contenido %}
+<div class="container">
+  {% include "_encabezado_dimension.html" %}
+
+  {# Reemplazar este bloque por el tablero de la dimensión #}
+  <div class="tarjeta en-construccion aparecer mb-5">
+    <div class="icono-circulo"><i class="bi {{ dim.icono }}"></i></div>
+    <h3>Tablero en construcción</h3>
+    <p>Aquí irán los indicadores, visualizaciones, filtros y conocimientos evidentes de esta dimensión.</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block titulo %}Inicio{% endblock %}
+{% block contenido %}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <span class="etiqueta aparecer"><span class="punto"></span> Medicina Legal · Cifras definitivas</span>
+        <h1 class="aparecer" style="--retraso: .1s">
+          Presuntos homicidios en Colombia, <span class="texto-degradado">2015 a 2024</span>
+        </h1>
+        <p class="lead aparecer" style="--retraso: .2s">
+          Análisis exploratorio de las víctimas de presuntos homicidios: quiénes son, dónde y cuándo ocurren los
+          hechos y qué relaciones aparecen al cruzar sus características.
+        </p>
+        <div class="d-flex flex-wrap gap-3 mt-4 aparecer" style="--retraso: .3s">
+          <a href="#dimensiones" class="btn btn-neon">
+            Explorar el análisis <span class="flecha"><i class="bi bi-arrow-up-right"></i></span>
+          </a>
+          <a href="#datos" class="btn btn-contorno">Sobre los datos</a>
+        </div>
+      </div>
+      <div class="col-lg-4 d-none d-md-block aparecer" style="--retraso: .4s">
+        <div class="escena">
+          <div class="cubo">
+            <div class="cara frente"><i class="bi bi-bar-chart-fill"></i></div>
+            <div class="cara atras"><i class="bi bi-geo-alt-fill"></i></div>
+            <div class="cara derecha"><i class="bi bi-people-fill"></i></div>
+            <div class="cara izquierda"><i class="bi bi-calendar3"></i></div>
+            <div class="cara arriba"></div>
+            <div class="cara abajo"></div>
+          </div>
+        </div>
+        <div class="sombra-cubo"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cifras -->
+<section class="pb-4">
+  <div class="container">
+    <div class="row g-3">
+      <div class="col-6 col-lg-3 aparecer"><div class="cifra"><div class="valor" data-contar="125284">125.284</div><div class="rotulo">registros</div></div></div>
+      <div class="col-6 col-lg-3 aparecer" style="--retraso: .1s"><div class="cifra"><div class="valor" data-contar="10">10</div><div class="rotulo">años analizados</div></div></div>
+      <div class="col-6 col-lg-3 aparecer" style="--retraso: .2s"><div class="cifra"><div class="valor" data-contar="32">32</div><div class="rotulo">departamentos y Bogotá D.C.</div></div></div>
+      <div class="col-6 col-lg-3 aparecer" style="--retraso: .3s"><div class="cifra"><div class="valor" data-contar="33">33</div><div class="rotulo">variables</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Dimensiones -->
+<section class="seccion" id="dimensiones">
+  <div class="container">
+    <h2 class="titulo-seccion aparecer">Dimensiones de análisis</h2>
+    <p class="text-suave mb-5 aparecer">Cada integrante desarrolla un tablero con indicadores, visualizaciones y conocimientos evidentes.</p>
+    <div class="row g-4">
+      {% for d in dimensiones %}
+      <div class="col-md-6 col-xl-3 aparecer" style="--retraso: {{ loop.index0 * 0.12 }}s">
+        <a class="tarjeta" href="{{ url_for(d.endpoint) }}">
+          <span class="numero">0{{ d.integrante }}</span>
+          <div class="icono-circulo"><i class="bi {{ d.icono }}"></i></div>
+          <h3>{{ d.nombre.replace("Dimensión ", "")|capitalize }}</h3>
+          <p>{{ d.resumen }}</p>
+          <span class="ver-mas">Ver tablero <i class="bi bi-arrow-right"></i></span>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Conjunto de datos -->
+<section class="seccion" id="datos">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-7 aparecer">
+        <div class="tarjeta">
+          <h2 class="titulo-seccion mb-4">Conjunto de datos</h2>
+          <dl class="ficha mb-0">
+            <dt>Nombre</dt><dd>Presuntos Homicidios. Colombia, 2015 a 2024. Cifras definitivas.</dd>
+            <dt>Tema</dt><dd>Justicia y Derecho</dd>
+            <dt>Población estudiada</dt><dd>Víctimas de presuntos homicidios registrados en Colombia entre 2015 y 2024.</dd>
+            <dt>Entidad que publica</dt><dd>Instituto Nacional de Medicina Legal y Ciencias Forenses</dd>
+            <dt>URL</dt>
+            <dd><a href="https://www.datos.gov.co/Justicia-y-Derecho/Presuntos-Homicidios-Colombia-2015-a-2024-Cifras-d/vtub-3de2/about_data"
+                   target="_blank" rel="noopener">datos.gov.co · vtub-3de2 <i class="bi bi-box-arrow-up-right"></i></a></dd>
+          </dl>
+        </div>
+      </div>
+      <div class="col-lg-5 aparecer" style="--retraso: .15s">
+        <div class="tarjeta">
+          <h2 class="titulo-seccion mb-4">Integrantes</h2>
+          <dl class="ficha mb-0">
+            <dt>Integrante 1</dt><dd>Dimensión poblacional y administración del repositorio</dd>
+            <dt>Integrante 2</dt><dd>Dimensión territorial y configuración de Flask</dd>
+            <dt>Integrante 3</dt><dd>Dimensión temporal y publicación de la aplicación</dd>
+            <dt>Integrante 4</dt><dd>Dimensión relacional y elaboración del informe</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
