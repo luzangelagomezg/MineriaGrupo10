@@ -30,6 +30,21 @@
           <li class="nav-item">
             <a class="nav-link {% if request.endpoint == 'inicio' %}active{% endif %}" href="{{ url_for('inicio') }}">Inicio</a>
           </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle {% if request.endpoint != 'inicio' %}active{% endif %}" href="#"
+               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Análisis de datos <i class="bi bi-chevron-down"></i>
+            </a>
+            <ul class="dropdown-menu">
+              {% for d in dimensiones %}
+              <li>
+                <a class="dropdown-item {% if request.endpoint == d.endpoint %}active{% endif %}" href="{{ url_for(d.endpoint) }}">
+                  <i class="bi {{ d.icono }}"></i> {{ d.nombre }}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </li>
         </ul>
         <a class="btn btn-neon sin-flecha d-none d-lg-inline-flex" href="https://www.datos.gov.co/Justicia-y-Derecho/Presuntos-Homicidios-Colombia-2015-a-2024-Cifras-d/vtub-3de2/about_data"
            target="_blank" rel="noopener">Ver datos</a>

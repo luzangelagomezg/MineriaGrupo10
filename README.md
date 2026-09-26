@@ -124,20 +124,15 @@ publicado por el Instituto Nacional de Medicina Legal y Ciencias Forenses.
 
 ```text
 app.py                  Rutas de la aplicación
-datos.py                Carga y limpieza del conjunto de datos (compartido por todas las dimensiones)
-data/                   CSV original comprimido en gzip (pandas lo lee directamente)
 templates/base.html     Plantilla base con Bootstrap, fuentes, íconos y el menú de navegación
 templates/_encabezado_dimension.html  Encabezado común (título, integrante y pregunta) de cada dimensión
 templates/*.html        Inicio y una página por dimensión
 static/css/styles.css   Identidad visual (tema oscuro, animaciones, tarjetas)
 static/js/main.js       Animaciones al hacer scroll, contadores y botón volver arriba
-requirements.txt        Dependencias
 ```
 
 Cada dimensión tiene su ruta en `app.py` y su plantilla en `templates/`. Las plantillas extienden
 `base.html` (`{% extends "base.html" %}`) para conservar el menú y la identidad visual.
-Los datos se obtienen con `from datos import cargar_datos`.
-
 La lista `DIMENSIONES` de `app.py` alimenta el menú, las tarjetas del inicio y el encabezado de cada
 página. Para construir un tablero basta con reemplazar el bloque «Tablero en construcción» de la
 plantilla de la dimensión. Clases útiles de `styles.css`:
@@ -155,7 +150,7 @@ Requiere Python 3.11 o superior.
 python -m venv .venv
 .venv\Scripts\activate          # Windows
 source .venv/bin/activate       # Linux / macOS
-pip install -r requirements.txt
+pip install flask
 python app.py
 ```
 
