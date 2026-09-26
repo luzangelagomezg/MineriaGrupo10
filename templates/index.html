@@ -19,7 +19,7 @@
           <a href="#dimensiones" class="btn btn-neon">
             Explorar el análisis <span class="flecha"><i class="bi bi-arrow-up-right"></i></span>
           </a>
-          <a href="#datos" class="btn btn-contorno">Sobre los datos</a>
+          <a href="#integrantes" class="btn btn-contorno">Integrantes</a>
         </div>
       </div>
       <div class="col-lg-4 d-none d-md-block aparecer" style="--retraso: .4s">
@@ -39,18 +39,6 @@
   </div>
 </section>
 
-<!-- Cifras -->
-<section class="pb-4">
-  <div class="container">
-    <div class="row g-3">
-      <div class="col-6 col-lg-3 aparecer"><div class="cifra"><div class="valor" data-contar="125284">125.284</div><div class="rotulo">registros</div></div></div>
-      <div class="col-6 col-lg-3 aparecer" style="--retraso: .1s"><div class="cifra"><div class="valor" data-contar="10">10</div><div class="rotulo">años analizados</div></div></div>
-      <div class="col-6 col-lg-3 aparecer" style="--retraso: .2s"><div class="cifra"><div class="valor" data-contar="32">32</div><div class="rotulo">departamentos y Bogotá D.C.</div></div></div>
-      <div class="col-6 col-lg-3 aparecer" style="--retraso: .3s"><div class="cifra"><div class="valor" data-contar="33">33</div><div class="rotulo">variables</div></div></div>
-    </div>
-  </div>
-</section>
-
 <!-- Dimensiones -->
 <section class="seccion" id="dimensiones">
   <div class="container">
@@ -63,7 +51,6 @@
           <span class="numero">0{{ d.integrante }}</span>
           <div class="icono-circulo"><i class="bi {{ d.icono }}"></i></div>
           <h3>{{ d.nombre.replace("Dimensión ", "")|capitalize }}</h3>
-          <p>{{ d.resumen }}</p>
           <span class="ver-mas">Ver tablero <i class="bi bi-arrow-right"></i></span>
         </a>
       </div>
@@ -72,25 +59,11 @@
   </div>
 </section>
 
-<!-- Conjunto de datos -->
-<section class="seccion" id="datos">
+<!-- Integrantes -->
+<section class="seccion" id="integrantes">
   <div class="container">
     <div class="row g-4">
-      <div class="col-lg-7 aparecer">
-        <div class="tarjeta">
-          <h2 class="titulo-seccion mb-4">Conjunto de datos</h2>
-          <dl class="ficha mb-0">
-            <dt>Nombre</dt><dd>Presuntos Homicidios. Colombia, 2015 a 2024. Cifras definitivas.</dd>
-            <dt>Tema</dt><dd>Justicia y Derecho</dd>
-            <dt>Población estudiada</dt><dd>Víctimas de presuntos homicidios registrados en Colombia entre 2015 y 2024.</dd>
-            <dt>Entidad que publica</dt><dd>Instituto Nacional de Medicina Legal y Ciencias Forenses</dd>
-            <dt>URL</dt>
-            <dd><a href="https://www.datos.gov.co/Justicia-y-Derecho/Presuntos-Homicidios-Colombia-2015-a-2024-Cifras-d/vtub-3de2/about_data"
-                   target="_blank" rel="noopener">datos.gov.co · vtub-3de2 <i class="bi bi-box-arrow-up-right"></i></a></dd>
-          </dl>
-        </div>
-      </div>
-      <div class="col-lg-5 aparecer" style="--retraso: .15s">
+      <div class="col-lg-6 aparecer">
         <div class="tarjeta">
           <h2 class="titulo-seccion mb-4">Integrantes</h2>
           <dl class="ficha mb-0">

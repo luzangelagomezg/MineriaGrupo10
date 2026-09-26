@@ -10,7 +10,6 @@ DIMENSIONES = [
         "icono": "bi-people-fill",
         "integrante": 1,
         "pregunta": "¿Cómo está compuesta y distribuida la población analizada según sus principales características?",
-        "resumen": "Sexo, edad, ciclo vital, escolaridad y pertenencia étnica de las víctimas.",
     },
     {
         "endpoint": "territorial",
@@ -18,7 +17,6 @@ DIMENSIONES = [
         "icono": "bi-geo-alt-fill",
         "integrante": 2,
         "pregunta": "¿Cómo se distribuye la población y sus principales características entre los territorios disponibles?",
-        "resumen": "Departamentos, municipios y zonas urbanas o rurales donde ocurren los hechos.",
     },
     {
         "endpoint": "temporal",
@@ -26,7 +24,6 @@ DIMENSIONES = [
         "icono": "bi-graph-up-arrow",
         "integrante": 3,
         "pregunta": "¿Cómo ha cambiado el comportamiento de la población durante el periodo disponible?",
-        "resumen": "Evolución por año, mes, día de la semana y rango horario entre 2015 y 2024.",
     },
     {
         "endpoint": "multivariada",
@@ -34,7 +31,6 @@ DIMENSIONES = [
         "icono": "bi-diagram-3-fill",
         "integrante": 4,
         "pregunta": "¿Qué diferencias o relaciones evidentes pueden identificarse al analizar conjuntamente tres o más variables?",
-        "resumen": "Cruces entre sexo, edad, mecanismo, territorio y periodo.",
     },
 ]
 

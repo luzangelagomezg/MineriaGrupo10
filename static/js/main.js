@@ -33,27 +33,4 @@ document.addEventListener("DOMContentLoaded", () => {
       t.style.setProperty("--my", `${ev.clientY - r.top}px`);
     });
   });
-
-  // Contadores animados: <span data-contar="125284">0</span>
-  const formato = new Intl.NumberFormat("es-CO");
-  const contar = (el) => {
-    const fin = Number(el.dataset.contar);
-    const inicio = performance.now();
-    const duracion = 1600;
-    const paso = (ahora) => {
-      const p = Math.min((ahora - inicio) / duracion, 1);
-      el.textContent = formato.format(Math.round(fin * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) requestAnimationFrame(paso);
-    };
-    requestAnimationFrame(paso);
-  };
-  const observadorCifras = new IntersectionObserver((entradas) => {
-    entradas.forEach((e) => {
-      if (e.isIntersecting) {
-        contar(e.target);
-        observadorCifras.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.6 });
-  document.querySelectorAll("[data-contar]").forEach((el) => observadorCifras.observe(el));
 });

@@ -450,24 +450,6 @@ a:hover { color: #7dffc0; }
 .tarjeta .ver-mas i { transition: transform 0.3s ease; }
 .tarjeta:hover .ver-mas i { transform: translateX(6px); }
 
-/* ---------- Cifras ---------- */
-.cifra {
-  text-align: center;
-  padding: 1.6rem 1rem;
-  border-radius: var(--radio);
-  border: 1px solid var(--borde);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.cifra .valor {
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  font-weight: 600;
-  color: var(--acento);
-  letter-spacing: -0.03em;
-}
-
-.cifra .rotulo { color: var(--texto-suave); font-size: 0.95rem; }
-
 /* ---------- Secciones ---------- */
 .seccion { padding: 4rem 0; }
 
