@@ -61,7 +61,12 @@ def territorial():
 
 @app.route("/temporal")
 def temporal():
-    return render_template("temporal.html", dim=dimension("temporal"))
+    # Dimensión temporal (Integrante 3): la lógica está en dimension_temporal.py
+    from flask import request
+    from dimension_temporal import tablero_temporal
+
+    contexto = tablero_temporal(request.args)
+    return render_template("temporal.html", dim=dimension("temporal"), **contexto)
 
 
 @app.route("/multivariada")
