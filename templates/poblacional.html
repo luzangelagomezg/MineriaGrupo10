@@ -2,14 +2,101 @@
 {% block titulo %}{{ dim.nombre }}{% endblock %}
 {% block contenido %}
 <section class="container py-4">
-	<h1 class="mb-3">{{ dim.nombre }}</h1>
-	<p class="mb-4">{{ dim.pregunta }}</p>
+	{% include "_encabezado_dimension.html" %}
+	<p class="text-suave mb-4">Este tablero presenta víctimas registradas de presuntos homicidios, no información sobre victimarios.</p>
 
-	<div class="card" style="max-width: 24rem;">
-		<div class="card-body">
-			<h2 class="h5 card-title">Total de registros</h2>
-			<p class="display-6 mb-0">{{ "{:,}".format(total_registros).replace(",", ".") }}</p>
+	<form method="get" action="{{ url_for('poblacional') }}" class="mb-4">
+		<div class="row g-3 align-items-end">
+			<div class="col-12 col-md-5">
+				<label for="filtro-anio" class="form-label">Año del hecho</label>
+				<select id="filtro-anio" name="anio" class="form-select">
+					<option value="Todos" {% if anio_seleccionado == "Todos" %}selected{% endif %}>Todos</option>
+					{% for anio in anios_disponibles %}
+					<option value="{{ anio }}" {% if anio_seleccionado == anio|string %}selected{% endif %}>{{ anio }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-5">
+				<label for="filtro-sexo" class="form-label">Sexo de la victima</label>
+				<select id="filtro-sexo" name="sexo" class="form-select">
+					<option value="Todos" {% if sexo_seleccionado == "Todos" %}selected{% endif %}>Todos</option>
+					{% for sexo in sexos_disponibles %}
+					<option value="{{ sexo }}" {% if sexo_seleccionado == sexo %}selected{% endif %}>{{ sexo }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-2">
+				<button type="submit" class="btn btn-neon sin-flecha w-100">Aplicar</button>
+			</div>
 		</div>
-	</div>
+	</form>
+
+	<section aria-label="Indicadores poblacionales" class="row g-3 mb-4">
+		<div class="col-12 col-md-4">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h6 text-suave">Total de víctimas registradas</h2>
+					<p class="display-6 fw-semibold mb-0">{{ "{:,}".format(total_registros).replace(",", ".") }}</p>
+				</div>
+			</article>
+		</div>
+		<div class="col-12 col-md-4">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h6 text-suave">Grupo de edad predominante</h2>
+					<p class="fs-3 fw-semibold mb-1">{{ grupo_edad_predominante }}</p>
+					<p class="text-suave mb-0">{{ "{:,}".format(cantidad_grupo_predominante).replace(",", ".") }} víctimas</p>
+				</div>
+			</article>
+		</div>
+		<div class="col-12 col-md-4">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h6 text-suave">Ciclo vital predominante</h2>
+					<p class="fs-5 fw-semibold mb-1">{{ ciclo_vital_predominante }}</p>
+					<p class="text-suave mb-0">{{ "{:,}".format(cantidad_ciclo_vital_predominante).replace(",", ".") }} víctimas</p>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<section aria-label="Distribuciones poblacionales" class="row g-3">
+		<div class="col-12 col-xl-6">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h5">Víctimas registradas según sexo</h2>
+					<div style="height: 20rem;">
+						<canvas id="grafica-sexo" role="img" aria-label="Gráfica de barras de víctimas registradas según sexo"></canvas>
+					</div>
+				</div>
+			</article>
+		</div>
+		<div class="col-12 col-xl-6">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h5">Víctimas registradas según grupo de edad</h2>
+					<div style="height: 30rem;">
+						<canvas id="grafica-edad" role="img" aria-label="Gráfica de barras de víctimas registradas según grupo de edad"></canvas>
+					</div>
+				</div>
+			</article>
+		</div>
+		<div class="col-12 col-xl-6">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h5">Víctimas registradas según ciclo vital</h2>
+					<div style="height: 24rem;">
+						<canvas id="grafica-ciclo-vital" role="img" aria-label="Gráfica de barras de víctimas registradas según ciclo vital"></canvas>
+					</div>
+				</div>
+			</article>
+		</div>
+	</section>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script id="poblacional-chart-data" type="application/json">{{ datos_graficas|tojson }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/poblacional.js') }}"></script>
 {% endblock %}
