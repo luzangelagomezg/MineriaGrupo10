@@ -1,6 +1,17 @@
 from flask import Flask, render_template
+import os
+import pandas as pd
 
 app = Flask(__name__)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+RUTA_DATOS = os.path.join(
+    BASE_DIR,
+    "data",
+    "presuntos_homicidios_2015_2024.csv"
+)
+
+df = pd.read_csv(RUTA_DATOS)
 
 # Datos de cada dimensión: los usan el menú, la página de inicio y los encabezados
 DIMENSIONES = [
@@ -51,7 +62,13 @@ def inicio():
 
 @app.route("/poblacional")
 def poblacional():
-    return render_template("poblacional.html", dim=dimension("poblacional"))
+    total_registros = len(df)
+
+    return render_template(
+        "poblacional.html",
+        dim=dimension("poblacional"),
+        total_registros=total_registros
+    )
 
 
 @app.route("/territorial")

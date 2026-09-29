@@ -1,4 +1,15 @@
 {% extends "base.html" %}
 {% block titulo %}{{ dim.nombre }}{% endblock %}
 {% block contenido %}
+<section class="container py-4">
+	<h1 class="mb-3">{{ dim.nombre }}</h1>
+	<p class="mb-4">{{ dim.pregunta }}</p>
+
+	<div class="card" style="max-width: 24rem;">
+		<div class="card-body">
+			<h2 class="h5 card-title">Total de registros</h2>
+			<p class="display-6 mb-0">{{ "{:,}".format(total_registros).replace(",", ".") }}</p>
+		</div>
+	</div>
+</section>
 {% endblock %}
