@@ -1,14 +1,258 @@
 {% extends "base.html" %}
 {% block titulo %}{{ dim.nombre }}{% endblock %}
 {% block contenido %}
-<div class="container">
-  {% include "_encabezado_dimension.html" %}
+<section class="container py-4">
+	{% include "_encabezado_dimension.html" %}
+	<p class="text-suave mb-4">Este tablero muestra cómo se reparten entre departamentos, municipios y zonas las víctimas registradas de presuntos homicidios en Colombia entre 2015 y 2024.</p>
 
-  {# Reemplazar este bloque por el tablero de la dimensión #}
-  <div class="tarjeta en-construccion aparecer mb-5">
-    <div class="icono-circulo"><i class="bi {{ dim.icono }}"></i></div>
-    <h3>Tablero en construcción</h3>
-    <p>Aquí irán los indicadores, visualizaciones, filtros y conocimientos evidentes de esta dimensión.</p>
-  </div>
-</div>
+	<!-- Variables utilizadas -->
+	<article class="card mb-4">
+		<div class="card-body">
+			<h2 class="h5"><i class="bi bi-list-columns-reverse"></i> Variables utilizadas</h2>
+			<div class="table-responsive">
+				<table class="table table-sm align-middle mb-0">
+					<thead><tr><th>Variable</th><th>Tipo</th><th>Uso en el tablero</th></tr></thead>
+					<tbody>
+						<tr><td>Departamento del hecho DANE</td><td>Territorial (categórica)</td><td>Distribución, participación y ranking de los departamentos.</td></tr>
+						<tr><td>Municipio del hecho DANE</td><td>Territorial (categórica)</td><td>Municipios con más registros y concentración municipal.</td></tr>
+						<tr><td>Zona del hecho</td><td>Territorial (categórica)</td><td>Cabecera municipal, centro poblado o parte rural.</td></tr>
+						<tr><td>Año del hecho</td><td>Temporal (numérica)</td><td>Filtro interactivo y comparación 2015 vs. 2024.</td></tr>
+						<tr><td>Sexo de la víctima</td><td>Categórica</td><td>Filtro interactivo.</td></tr>
+					</tbody>
+				</table>
+			</div>
+			<p class="text-suave small mt-2 mb-0">Limpieza aplicada: los nombres de departamentos y municipios se unificaron con su código DANE ("Bogotá D.C." y "Bogotá, D.C.", "Quindio" y "Quindío", "Cartagena" y "Cartagena de Indias") y las dos formas de escribir "Centro poblado" quedaron como una sola zona.</p>
+		</div>
+	</article>
+
+	<!-- Filtros -->
+	<form method="get" action="{{ url_for('territorial') }}" class="mb-4">
+		<div class="row g-3 align-items-end">
+			<div class="col-12 col-md-3">
+				<label for="filtro-anio" class="form-label"><i class="bi bi-calendar3"></i> Año del hecho</label>
+				<select id="filtro-anio" name="anio" class="form-select">
+					<option value="Todos" {% if anio_seleccionado == "Todos" %}selected{% endif %}>Todos</option>
+					{% for anio in anios_disponibles %}
+					<option value="{{ anio }}" {% if anio_seleccionado == anio|string %}selected{% endif %}>{{ anio }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-3">
+				<label for="filtro-sexo" class="form-label"><i class="bi bi-gender-ambiguous"></i> Sexo de la víctima</label>
+				<select id="filtro-sexo" name="sexo" class="form-select">
+					<option value="Todos" {% if sexo_seleccionado == "Todos" %}selected{% endif %}>Todos</option>
+					{% for sexo in sexos_disponibles %}
+					<option value="{{ sexo }}" {% if sexo_seleccionado == sexo %}selected{% endif %}>{{ sexo }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-4">
+				<label for="filtro-departamento" class="form-label"><i class="bi bi-geo-alt"></i> Ver municipios de</label>
+				<select id="filtro-departamento" name="departamento" class="form-select">
+					<option value="Todos" {% if departamento_seleccionado == "Todos" %}selected{% endif %}>Todo el país</option>
+					{% for depto in departamentos_disponibles %}
+					<option value="{{ depto }}" {% if departamento_seleccionado == depto %}selected{% endif %}>{{ depto }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-2 d-grid gap-2">
+				<button type="submit" class="btn btn-neon sin-flecha w-100">Aplicar</button>
+				{% if hay_filtros %}<a href="{{ url_for('territorial') }}" class="btn btn-contorno w-100">Quitar filtros</a>{% endif %}
+			</div>
+		</div>
+	</form>
+
+	<!-- Indicadores -->
+	<section aria-label="Indicadores territoriales" class="row g-3 mb-4">
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave"><i class="bi bi-people"></i> Víctimas en {{ indicadores.ambito }}</h2>
+				<p class="display-6 fw-semibold mb-1">{{ indicadores.total }}</p>
+				<p class="text-suave mb-0">En {{ indicadores.municipios }} municipios con registros</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave"><i class="bi bi-trophy"></i> {{ indicadores.nivel|capitalize }} con más víctimas</h2>
+				<p class="fs-4 fw-semibold mb-1">{{ indicadores.lider }}</p>
+				<p class="text-suave mb-0">{{ indicadores.lider_casos }} víctimas ({{ indicadores.lider_pct }})</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave"><i class="bi bi-bullseye"></i> Concentración en los 5 primeros</h2>
+				<p class="fs-3 fw-semibold mb-1">{{ indicadores.top5 }}</p>
+				<p class="text-suave mb-0">{{ indicadores.mpios_mitad }} municipios reúnen la mitad de los casos</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave"><i class="bi bi-tree"></i> Víctimas en zona rural</h2>
+				<p class="fs-3 fw-semibold mb-1">{{ indicadores.rural }}</p>
+				<p class="text-suave mb-0">Parte rural (vereda y campo)</p>
+			</div></article>
+		</div>
+	</section>
+
+	<!-- Visualización 1: departamentos -->
+	<section aria-label="Distribución por departamento" class="row g-3 mb-4">
+		<div class="col-12 col-xl-8">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-bar-chart-steps"></i> 1. Los 15 departamentos con más víctimas</h2>
+				<div style="height: 26rem;">
+					<canvas id="grafica-departamentos" role="img" aria-label="Gráfica de barras de víctimas por departamento"></canvas>
+				</div>
+				<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.departamentos }}</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-xl-4">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5">Participación por departamento</h2>
+				<div class="table-responsive" style="max-height: 30rem;">
+					<table class="table table-sm mb-0">
+						<thead><tr><th>#</th><th>Departamento</th><th class="text-end">Víctimas</th><th class="text-end">%</th></tr></thead>
+						<tbody>
+							{% for fila in tabla_deptos %}
+							<tr {% if fila.seleccionado %}style="color: var(--acento); font-weight: 600;"{% endif %}>
+								<td class="text-suave">{{ fila.posicion }}</td>
+								<td>{{ fila.departamento }}</td>
+								<td class="text-end">{{ fila.casos }}</td>
+								<td class="text-end">{{ fila.porcentaje }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div></article>
+		</div>
+	</section>
+
+	<!-- Visualizaciones 2 y 3: municipios y zonas -->
+	<section aria-label="Municipios y zonas" class="row g-3 mb-4">
+		<div class="col-12 col-xl-5">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-pin-map"></i> 2. Los 10 municipios con más víctimas</h2>
+				<p class="text-suave small mb-2">{{ "En " ~ departamento_seleccionado if departamento_seleccionado != "Todos" else "En todo el país" }}. Elige un departamento en los filtros para ver sus municipios.</p>
+				<div style="height: 24rem;">
+					<canvas id="grafica-municipios" role="img" aria-label="Gráfica de barras de los municipios con más víctimas"></canvas>
+				</div>
+				<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.municipios }}</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-xl-7">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-tree"></i> 3. Zona del hecho por departamento</h2>
+				<p class="text-suave small mb-2">Porcentaje de las víctimas de cada departamento según la zona, ordenado de más a menos rural.</p>
+				<div style="height: 44rem;">
+					<canvas id="grafica-zonas" role="img" aria-label="Gráfica de barras apiladas de zona del hecho por departamento"></canvas>
+				</div>
+				<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.zonas }}</p>
+			</div></article>
+		</div>
+	</section>
+
+	<!-- Conocimientos evidentes -->
+	<h2 class="h4 mt-5 mb-1">Conocimientos evidentes</h2>
+	<p class="text-suave mb-3">Calculados sobre el total nacional, sin filtros (125.284 víctimas).</p>
+	<div class="row g-3 mb-4">
+		{% set conocimientos = [
+			{
+				"titulo": "1. Los homicidios se concentran en pocos territorios",
+				"pregunta": "¿Los registros se reparten de forma homogénea entre los territorios o se concentran en algunos?",
+				"variables": "Departamento y municipio del hecho (unificados con el código DANE).",
+				"procedimiento": "Se contaron las víctimas por departamento y por municipio, se calculó el porcentaje de participación de cada uno y el porcentaje acumulado ordenando de mayor a menor.",
+				"evidencia": "Gráficas 1 y 2, tabla de participación e indicador de concentración.",
+				"hallazgo": "Valle del Cauca (18,8 %), Antioquia (15,0 %) y Bogotá (9,3 %) suman el 43,1 % de las víctimas y los cinco primeros departamentos el 53,4 %. Solo 30 de 1.088 municipios con registros (2,8 %) acumulan la mitad de los casos; Bogotá y Cali, solas, el 18,4 %.",
+				"interpretacion": "El fenómeno se localiza sobre todo en las grandes ciudades, aunque también aparecen municipios intermedios como Tumaco, Soledad, Soacha y Palmira entre los diez primeros.",
+				"utilidad": "Permite focalizar los recursos de prevención e investigación en pocos municipios que explican gran parte de los casos.",
+				"limitacion": "Son conteos absolutos: no indican qué territorio tiene más riesgo por habitante, porque el conjunto de datos no incluye la población de cada territorio."
+			},
+			{
+				"titulo": "2. En algunos departamentos el homicidio es rural",
+				"pregunta": "¿La zona donde ocurren los hechos (urbana o rural) es igual en todos los departamentos?",
+				"variables": "Departamento y zona del hecho.",
+				"procedimiento": "Se cruzó el departamento con la zona del hecho y se calculó el porcentaje de cada zona dentro de cada departamento, ordenando de más a menos rural.",
+				"evidencia": "Gráfica 3 e indicador «Víctimas en zona rural».",
+				"hallazgo": "En el país el 70,3 % de las víctimas se registra en cabeceras municipales y el 23,3 % en la parte rural. Pero en Guaviare el 75,4 % es rural, en Putumayo el 64,3 %, en Arauca el 58,3 % y en Cauca el 52,3 %; en Bogotá (0,6 %) y Atlántico (0,8 %) es casi nulo.",
+				"interpretacion": "Hay dos patrones: un homicidio urbano en las grandes ciudades y otro rural en departamentos periféricos, donde la violencia tiene dinámicas distintas.",
+				"utilidad": "Muestra que una misma estrategia de seguridad urbana no sirve para todos: en los departamentos rurales se necesitan acciones en veredas y centros poblados.",
+				"limitacion": "Los datos no permiten afirmar la causa de cada homicidio. En departamentos con pocos registros, como Guainía o Vaupés, los porcentajes cambian mucho con pocos casos."
+			},
+			{
+				"titulo": "3. Los territorios no cambian igual en el tiempo",
+				"pregunta": "¿Los departamentos con más víctimas han cambiado de forma similar entre 2015 y 2024?",
+				"variables": "Departamento y año del hecho.",
+				"procedimiento": "Se contaron las víctimas de 2015 y de 2024 en los 12 departamentos con más casos y se calculó la variación porcentual.",
+				"evidencia": "Tabla de variación 2015 vs. 2024 (abajo).",
+				"hallazgo": "Magdalena triplicó sus víctimas (+200,5 %) y Cauca las duplicó (+127,0 %); Bolívar, Santander y Atlántico crecieron más del 60 %. En cambio, Valle del Cauca (−11,1 %), Cundinamarca (−9,6 %) y Bogotá (−8,6 %) bajaron.",
+				"interpretacion": "Aunque Valle, Antioquia y Bogotá siguen liderando en volumen, el crecimiento se está desplazando hacia la región Caribe y el Cauca.",
+				"utilidad": "Sirve como alerta temprana: los departamentos que crecen deberían tener seguimiento prioritario aunque todavía no estén entre los de más casos.",
+				"limitacion": "Comparar solo dos años puede exagerar cambios puntuales; la evolución año a año se analiza en la dimensión temporal."
+			}
+		] %}
+		{% for c in conocimientos %}
+		<div class="col-12 col-xl-4">
+			<article class="card h-100"><div class="card-body">
+				<h3 class="h5">{{ c.titulo }}</h3>
+				<dl class="ficha small mb-0">
+					<dt>Pregunta</dt><dd>{{ c.pregunta }}</dd>
+					<dt>Variables</dt><dd>{{ c.variables }}</dd>
+					<dt>Procedimiento</dt><dd>{{ c.procedimiento }}</dd>
+					<dt>Evidencia</dt><dd>{{ c.evidencia }}</dd>
+					<dt>Hallazgo</dt><dd>{{ c.hallazgo }}</dd>
+					<dt>Interpretación</dt><dd>{{ c.interpretacion }}</dd>
+					<dt>Utilidad</dt><dd>{{ c.utilidad }}</dd>
+					<dt>Limitación</dt><dd class="mb-0">{{ c.limitacion }}</dd>
+				</dl>
+			</div></article>
+		</div>
+		{% endfor %}
+	</div>
+
+	<!-- Evidencia del conocimiento 3 -->
+	<article class="card mb-4"><div class="card-body">
+		<h2 class="h5"><i class="bi bi-arrow-left-right"></i> Variación 2015 vs. 2024 en los 12 departamentos con más víctimas</h2>
+		<div class="table-responsive">
+			<table class="table table-sm align-middle mb-0">
+				<thead><tr><th>Departamento</th><th class="text-end">2015</th><th class="text-end">2024</th><th class="text-end">Variación</th></tr></thead>
+				<tbody>
+					{% for fila in variacion %}
+					<tr>
+						<td>{{ fila.departamento }}</td>
+						<td class="text-end">{{ fila.a2015 }}</td>
+						<td class="text-end">{{ fila.a2024 }}</td>
+						<td class="text-end">
+							{% if fila.variacion > 0 %}<span style="color: #ff6b8b"><i class="bi bi-arrow-up-short"></i>+{{ fila.variacion|string|replace(".", ",") }} %</span>
+							{% else %}<span style="color: var(--acento)"><i class="bi bi-arrow-down-short"></i>{{ fila.variacion|string|replace(".", ",") }} %</span>
+							{% endif %}
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div></article>
+
+	<!-- Limitación y decisión -->
+	<div class="row g-3 mb-4">
+		<div class="col-12 col-lg-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-exclamation-triangle"></i> Limitación del análisis</h2>
+				<p class="mb-0">Los resultados son conteos absolutos. El conjunto de datos no incluye la población de cada departamento o municipio, así que no se pueden calcular tasas por cada 100.000 habitantes y los territorios más poblados aparecen naturalmente con más casos. Además, la variable «Localidad del hecho» solo está diligenciada para Bogotá (el 90,8 % de los registros dice «Sin información»), por lo que no se usó para comparar el resto del país.</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-lg-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-lightbulb"></i> Decisión sustentada en los datos</h2>
+				<p class="mb-0">Priorizar los programas de prevención y la capacidad de investigación en los 30 municipios que reúnen la mitad de las víctimas (encabezados por Bogotá, Cali, Medellín, Barranquilla y Cartagena), y diseñar una estrategia con enfoque rural para Guaviare, Putumayo, Arauca, Cauca y Nariño, donde gran parte de los casos ocurre fuera de las cabeceras. Magdalena, Cauca y Bolívar deben tener seguimiento especial por su fuerte crecimiento entre 2015 y 2024.</p>
+			</div></article>
+		</div>
+	</div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script id="territorial-chart-data" type="application/json">{{ graficas|tojson }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/territorial.js') }}"></script>
 {% endblock %}

@@ -56,7 +56,12 @@ def poblacional():
 
 @app.route("/territorial")
 def territorial():
-    return render_template("territorial.html", dim=dimension("territorial"))
+    # Dimensión territorial (Integrante 2): la lógica está en dimension_territorial.py
+    from flask import request
+    from dimension_territorial import tablero_territorial
+
+    contexto = tablero_territorial(request.args)
+    return render_template("territorial.html", dim=dimension("territorial"), **contexto)
 
 
 @app.route("/temporal")
