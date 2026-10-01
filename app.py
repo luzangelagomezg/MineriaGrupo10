@@ -36,6 +36,180 @@ ORDEN_CICLO_VITAL = [
     "Sin información"
 ]
 
+ORDEN_SEXO = ["Hombre", "Mujer", "Indeterminado", "Sin dato"]
+
+
+def formato_numero(valor):
+    return f"{valor:,}".replace(",", ".")
+
+
+def formato_porcentaje(valor):
+    return f"{valor:.2f}".replace(".", ",")
+
+
+def analizar_variable(datos, columna, orden, etiqueta):
+    valores = datos[columna].astype("object").where(datos[columna].notna(), "Sin dato")
+    conteos = valores.value_counts()
+    categorias = [categoria for categoria in orden if categoria in conteos.index]
+    categorias.extend(sorted(set(conteos.index).difference(orden)))
+    total = len(datos)
+
+    filas = [
+        {
+            "categoria": categoria,
+            "cantidad": int(conteos[categoria]),
+            "cantidad_texto": formato_numero(conteos[categoria]),
+            "porcentaje": float(conteos[categoria] / total * 100) if total else 0,
+            "porcentaje_texto": formato_porcentaje(conteos[categoria] / total * 100)
+            if total else "0,00"
+        }
+        for categoria in categorias
+    ]
+
+    if not filas:
+        dominante = {"categoria": "Sin datos", "cantidad": 0, "cantidad_texto": "0", "porcentaje": 0, "porcentaje_texto": "0,00"}
+        minoritaria = dominante
+        interpretacion = "No hay víctimas registradas en este subconjunto para describir la distribución."
+    else:
+        dominante = max(filas, key=lambda fila: fila["cantidad"])
+        minoritaria = min(filas, key=lambda fila: fila["cantidad"])
+        if len(filas) == 1:
+            interpretacion = (
+                f"En este subconjunto solo aparece {dominante['categoria']} "
+                f"({dominante['cantidad_texto']} víctimas; {dominante['porcentaje_texto']} %); "
+                "por tanto, no hay otras categorías para comparar."
+            )
+        else:
+            interpretacion = (
+                f"La mayor concentración de víctimas registradas según {etiqueta} corresponde a "
+                f"{dominante['categoria']} ({dominante['cantidad_texto']}; "
+                f"{dominante['porcentaje_texto']} %); la menor participación corresponde a "
+                f"{minoritaria['categoria']} ({minoritaria['cantidad_texto']}; "
+                f"{minoritaria['porcentaje_texto']} %). La distribución incluye "
+                f"{len(filas)} categorías."
+            )
+
+    ranking = sorted(filas, key=lambda fila: fila["cantidad"], reverse=True)
+    menores = sorted(filas, key=lambda fila: fila["cantidad"])
+    return {
+        "categorias": filas,
+        "valores": [fila["cantidad"] for fila in filas],
+        "cantidades_texto": [fila["cantidad_texto"] for fila in filas],
+        "porcentajes": [fila["porcentaje"] for fila in filas],
+        "porcentajes_texto": [fila["porcentaje_texto"] for fila in filas],
+        "dominante": dominante,
+        "minoritaria": minoritaria,
+        "principales": ranking[:3],
+        "menores": menores[:2],
+        "interpretacion": interpretacion
+    }
+
+
+def texto_categorias(filas):
+    return "; ".join(
+        f"{fila['categoria']}: {fila['cantidad_texto']} ({fila['porcentaje_texto']} %)"
+        for fila in filas
+    )
+
+
+def crear_resumen_general(datos):
+    total = len(datos)
+    analisis = {
+        "sexo": analizar_variable(datos, COLUMNA_SEXO, ORDEN_SEXO, "sexo"),
+        "edad": analizar_variable(datos, COLUMNA_EDAD, ORDEN_GRUPOS_EDAD, "grupo de edad"),
+        "ciclo_vital": analizar_variable(datos, COLUMNA_CICLO_VITAL, ORDEN_CICLO_VITAL, "ciclo vital")
+    }
+    sexo = analisis["sexo"]
+    edad = analisis["edad"]
+    ciclo = analisis["ciclo_vital"]
+    hombres = next((fila for fila in sexo["categorias"] if fila["categoria"] == "Hombre"), sexo["minoritaria"])
+    mujeres = next((fila for fila in sexo["categorias"] if fila["categoria"] == "Mujer"), sexo["minoritaria"])
+    anos = datos[COLUMNA_ANIO].dropna()
+    periodo = f"{int(anos.min())}–{int(anos.max())}" if not anos.empty else "sin periodo"
+
+    conclusion = (
+        f"Predominan hombres ({hombres['porcentaje_texto']} %), las edades "
+        f"{edad['dominante']['categoria']} ({edad['dominante']['porcentaje_texto']} %) "
+        f"y {ciclo['dominante']['categoria']} ({ciclo['dominante']['porcentaje_texto']} %). "
+        "Son porcentajes de registros, no estimaciones de riesgo."
+    )
+    respuesta = (
+        f"En el conjunto completo {periodo} hay {formato_numero(total)} víctimas registradas. "
+        f"Por sexo: {texto_categorias(sexo['categorias'])}. "
+        f"La mayor concentración por edad corresponde a {edad['dominante']['categoria']} "
+        f"({edad['dominante']['cantidad_texto']}; {edad['dominante']['porcentaje_texto']} %), "
+        f"y la menor a {edad['minoritaria']['categoria']} "
+        f"({edad['minoritaria']['cantidad_texto']}; {edad['minoritaria']['porcentaje_texto']} %). "
+        f"Por ciclo vital predomina {ciclo['dominante']['categoria']} "
+        f"({ciclo['dominante']['cantidad_texto']}; {ciclo['dominante']['porcentaje_texto']} %); "
+        f"la menor participación corresponde a {ciclo['minoritaria']['categoria']} "
+        f"({ciclo['minoritaria']['cantidad_texto']}; {ciclo['minoritaria']['porcentaje_texto']} %). "
+        "Estas distribuciones describen los registros disponibles y no establecen causas."
+    )
+
+    conocimientos = [
+        {
+            "titulo": "Composición de las víctimas registradas según sexo.",
+            "pregunta": "¿Cómo se distribuyen las víctimas registradas entre las categorías de sexo?",
+            "variables": COLUMNA_SEXO,
+            "procedimiento": f"Se agruparon los {formato_numero(total)} registros por sexo y se calculó cada participación sobre el total del conjunto.",
+            "evidencia": texto_categorias(sexo["categorias"]),
+            "hallazgo": f"La categoría predominante es {sexo['dominante']['categoria']} ({sexo['dominante']['cantidad_texto']}; {sexo['dominante']['porcentaje_texto']} %); la minoritaria es {sexo['minoritaria']['categoria']} ({sexo['minoritaria']['cantidad_texto']}; {sexo['minoritaria']['porcentaje_texto']} %).",
+            "interpretacion": "La composición registrada se concentra en la categoría predominante; las participaciones representan la distribución de casos observados.",
+            "utilidad": "Puede orientar cruces exploratorios posteriores con año, territorio y variables contextuales.",
+            "limitacion": "Las cantidades no comparan el tamaño de cada grupo en la población ni permiten estimar riesgo o tasas."
+        },
+        {
+            "titulo": "Concentración de las víctimas registradas según grupo de edad.",
+            "pregunta": "¿En qué grupos quinquenales se concentra la mayor cantidad de víctimas registradas?",
+            "variables": COLUMNA_EDAD,
+            "procedimiento": f"Se agruparon los registros por grupo quinquenal, se contaron las categorías y se calculó su participación sobre {formato_numero(total)} registros.",
+            "evidencia": f"Principales: {texto_categorias(edad['principales'])}. Menor cantidad: {texto_categorias(edad['menores'])}.",
+            "hallazgo": f"La mayor cantidad corresponde a {edad['dominante']['categoria']} ({edad['dominante']['cantidad_texto']}; {edad['dominante']['porcentaje_texto']} %); la menor, a {edad['minoritaria']['categoria']} ({edad['minoritaria']['cantidad_texto']}; {edad['minoritaria']['porcentaje_texto']} %).",
+            "interpretacion": "Los recuentos muestran cómo se distribuyen los casos entre intervalos etarios y qué intervalos reúnen más registros.",
+            "utilidad": "Sirve para orientar análisis descriptivos más detallados por periodo, territorio o circunstancias del hecho.",
+            "limitacion": "Los recuentos no consideran cuántas personas hay en cada grupo de edad; no expresan riesgo ni tasas comparativas."
+        },
+        {
+            "titulo": "Distribución de las víctimas registradas según ciclo vital.",
+            "pregunta": "¿Qué etapas del ciclo vital reúnen más y menos víctimas registradas?",
+            "variables": COLUMNA_CICLO_VITAL,
+            "procedimiento": f"Se agruparon los registros por ciclo vital y se calcularon cantidades y porcentajes respecto de {formato_numero(total)} registros.",
+            "evidencia": f"Principales: {texto_categorias(ciclo['principales'])}. Menor cantidad: {texto_categorias(ciclo['menores'])}.",
+            "hallazgo": f"Predomina {ciclo['dominante']['categoria']} ({ciclo['dominante']['cantidad_texto']}; {ciclo['dominante']['porcentaje_texto']} %); la menor cantidad corresponde a {ciclo['minoritaria']['categoria']} ({ciclo['minoritaria']['cantidad_texto']}; {ciclo['minoritaria']['porcentaje_texto']} %).",
+            "interpretacion": "La distribución describe el peso de cada etapa dentro de los registros disponibles, incluidas las categorías informativas.",
+            "utilidad": "Puede apoyar la selección de grupos para cruces exploratorios con información temporal, territorial o contextual.",
+            "limitacion": "Las categorías no tienen necesariamente el mismo tamaño poblacional y los conteos no miden riesgo individual."
+        }
+    ]
+
+    return {
+        "periodo": periodo,
+        "total": total,
+        "total_texto": formato_numero(total),
+        "hombres": hombres,
+        "mujeres": mujeres,
+        "sexo": sexo,
+        "edad": edad,
+        "ciclo_vital": ciclo,
+        "conclusion": conclusion,
+        "respuesta": respuesta,
+        "variables": [COLUMNA_SEXO, COLUMNA_EDAD, COLUMNA_CICLO_VITAL, COLUMNA_ANIO],
+        "conocimientos": conocimientos,
+        "limitacion": (
+            "Este análisis es descriptivo y se basa en registros de víctimas de presuntos homicidios. "
+            "Las cantidades absolutas no permiten concluir que un grupo tenga mayor riesgo que otro; "
+            "para estimar tasas o comparar riesgos se requieren denominadores poblacionales por sexo, "
+            "edad y periodo. La presencia de categorías como Indeterminado, Por determinar y Sin información "
+            "también delimita la completitud de algunas variables."
+        ),
+        "decision": (
+            f"Como uso exploratorio, se podrían priorizar cruces temporales, territoriales y contextuales "
+            f"para {edad['dominante']['categoria']} y {ciclo['dominante']['categoria']}, y revisar la "
+            "completitud de las categorías informativas. Esto no basta por sí solo para recomendar una intervención."
+        )
+    }
+
 # Datos de cada dimensión: los usan el menú, la página de inicio y los encabezados
 DIMENSIONES = [
     {
@@ -112,58 +286,28 @@ def poblacional():
         ].copy()
 
     total_registros = len(datos_filtrados)
-
-    conteos_sexo = datos_filtrados[COLUMNA_SEXO].value_counts()
-    etiquetas_sexo = [
-        sexo for sexo in sexos_disponibles if conteos_sexo.get(sexo, 0) > 0
-    ]
-
-    conteos_edad = datos_filtrados[COLUMNA_EDAD].value_counts()
-    edades_presentes = set(conteos_edad.index)
-    etiquetas_edad = [
-        edad for edad in ORDEN_GRUPOS_EDAD if edad in edades_presentes
-    ]
-    etiquetas_edad.extend(sorted(edades_presentes.difference(ORDEN_GRUPOS_EDAD)))
-
-    conteos_ciclo_vital = datos_filtrados[COLUMNA_CICLO_VITAL].value_counts()
-    ciclos_presentes = set(conteos_ciclo_vital.index)
-    etiquetas_ciclo_vital = [
-        ciclo for ciclo in ORDEN_CICLO_VITAL if ciclo in ciclos_presentes
-    ]
-    etiquetas_ciclo_vital.extend(
-        sorted(ciclos_presentes.difference(ORDEN_CICLO_VITAL))
-    )
-
-    if conteos_edad.empty:
-        grupo_edad_predominante = "Sin datos"
-        cantidad_grupo_predominante = 0
-    else:
-        grupo_edad_predominante = conteos_edad.index[0]
-        cantidad_grupo_predominante = int(conteos_edad.iloc[0])
-
-    if conteos_ciclo_vital.empty:
-        ciclo_vital_predominante = "Sin datos"
-        cantidad_ciclo_vital_predominante = 0
-    else:
-        ciclo_vital_predominante = conteos_ciclo_vital.index[0]
-        cantidad_ciclo_vital_predominante = int(conteos_ciclo_vital.iloc[0])
+    analisis_filtrado = {
+        "sexo": analizar_variable(datos_filtrados, COLUMNA_SEXO, ORDEN_SEXO, "sexo"),
+        "edad": analizar_variable(datos_filtrados, COLUMNA_EDAD, ORDEN_GRUPOS_EDAD, "grupo de edad"),
+        "ciclo_vital": analizar_variable(datos_filtrados, COLUMNA_CICLO_VITAL, ORDEN_CICLO_VITAL, "ciclo vital")
+    }
+    grupo_edad_predominante = analisis_filtrado["edad"]["dominante"]["categoria"]
+    cantidad_grupo_predominante = analisis_filtrado["edad"]["dominante"]["cantidad"]
+    ciclo_vital_predominante = analisis_filtrado["ciclo_vital"]["dominante"]["categoria"]
+    cantidad_ciclo_vital_predominante = analisis_filtrado["ciclo_vital"]["dominante"]["cantidad"]
 
     datos_graficas = {
-        "sexo": {
-            "etiquetas": etiquetas_sexo,
-            "valores": [int(conteos_sexo[sexo]) for sexo in etiquetas_sexo]
-        },
-        "edad": {
-            "etiquetas": etiquetas_edad,
-            "valores": [int(conteos_edad[edad]) for edad in etiquetas_edad]
-        },
-        "ciclo_vital": {
-            "etiquetas": etiquetas_ciclo_vital,
-            "valores": [
-                int(conteos_ciclo_vital[ciclo]) for ciclo in etiquetas_ciclo_vital
-            ]
+        nombre: {
+            "etiquetas": [fila["categoria"] for fila in analisis["categorias"]],
+            "valores": analisis["valores"],
+            "porcentajes": analisis["porcentajes"],
+            "cantidades_texto": analisis["cantidades_texto"],
+            "porcentajes_texto": analisis["porcentajes_texto"],
+            "interpretacion": analisis["interpretacion"]
         }
+        for nombre, analisis in analisis_filtrado.items()
     }
+    resumen_general = crear_resumen_general(df)
 
     return render_template(
         "poblacional.html",
@@ -177,7 +321,8 @@ def poblacional():
         sexos_disponibles=sexos_disponibles,
         anio_seleccionado=anio_solicitado,
         sexo_seleccionado=sexo_solicitado,
-        datos_graficas=datos_graficas
+        datos_graficas=datos_graficas,
+        resumen_general=resumen_general
     )
 
 

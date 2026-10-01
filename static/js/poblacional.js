@@ -31,7 +31,12 @@
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (context) => ` ${context.parsed[horizontal ? "x" : "y"].toLocaleString("es-CO")}`
+              label: (context) => {
+                const index = context.dataIndex;
+                const cantidad = serie.cantidades_texto[index];
+                const porcentaje = serie.porcentajes_texto[index];
+                return ` ${cantidad} víctimas (${porcentaje} %)`;
+              }
             }
           }
         },
