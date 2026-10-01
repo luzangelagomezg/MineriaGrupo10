@@ -68,6 +68,7 @@
 					<div style="height: 20rem;">
 						<canvas id="grafica-sexo" role="img" aria-label="Gráfica de barras de víctimas registradas según sexo"></canvas>
 					</div>
+					<p class="text-suave mt-3 mb-0"><strong>Interpretación:</strong> {{ datos_graficas.sexo.interpretacion }}</p>
 				</div>
 			</article>
 		</div>
@@ -78,6 +79,7 @@
 					<div style="height: 30rem;">
 						<canvas id="grafica-edad" role="img" aria-label="Gráfica de barras de víctimas registradas según grupo de edad"></canvas>
 					</div>
+					<p class="text-suave mt-3 mb-0"><strong>Interpretación:</strong> {{ datos_graficas.edad.interpretacion }}</p>
 				</div>
 			</article>
 		</div>
@@ -88,9 +90,87 @@
 					<div style="height: 24rem;">
 						<canvas id="grafica-ciclo-vital" role="img" aria-label="Gráfica de barras de víctimas registradas según ciclo vital"></canvas>
 					</div>
+					<p class="text-suave mt-3 mb-0"><strong>Interpretación:</strong> {{ datos_graficas.ciclo_vital.interpretacion }}</p>
 				</div>
 			</article>
 		</div>
+		<div class="col-12 col-xl-6">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h5">Resumen poblacional {{ resumen_general.periodo }}</h2>
+					<p class="small text-suave">Resultados generales del conjunto completo · {{ resumen_general.periodo }}. No cambia con los filtros.</p>
+
+					<div class="mb-3">
+						<div class="text-suave">Total de víctimas registradas</div>
+						<div class="display-6 fw-semibold">{{ resumen_general.total_texto }}</div>
+					</div>
+
+					<div class="row g-2 mb-3">
+						<div class="col-6">
+							<div class="border rounded-3 p-2 h-100">
+								<div class="small text-suave">Hombres</div>
+								<strong>{{ resumen_general.hombres.porcentaje_texto }} %</strong>
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="border rounded-3 p-2 h-100">
+								<div class="small text-suave">Mujeres</div>
+								<strong>{{ resumen_general.mujeres.porcentaje_texto }} %</strong>
+							</div>
+						</div>
+					</div>
+
+					<p class="mb-2"><strong>Edad predominante:</strong> {{ resumen_general.edad.dominante.categoria }}<br>
+						<span class="text-suave">{{ resumen_general.edad.dominante.cantidad_texto }} víctimas · {{ resumen_general.edad.dominante.porcentaje_texto }} %</span>
+					</p>
+					<p class="mb-3"><strong>Ciclo vital predominante:</strong> {{ resumen_general.ciclo_vital.dominante.categoria }}<br>
+						<span class="text-suave">{{ resumen_general.ciclo_vital.dominante.cantidad_texto }} víctimas · {{ resumen_general.ciclo_vital.dominante.porcentaje_texto }} %</span>
+					</p>
+					<p class="mb-0">{{ resumen_general.conclusion }}</p>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<section class="seccion pb-3" aria-labelledby="variables-titulo">
+		<h2 class="h4" id="variables-titulo">Variables del análisis</h2>
+		<p class="text-suave mb-0">La composición se describe mediante {{ resumen_general.variables[0] }}, {{ resumen_general.variables[1] }} y {{ resumen_general.variables[2] }}. {{ resumen_general.variables[3] }} permite explorar subconjuntos temporales mediante el filtro.</p>
+	</section>
+
+	<section class="seccion pt-3 pb-3" aria-labelledby="respuesta-titulo">
+		<h2 class="h4" id="respuesta-titulo">Respuesta a la pregunta de análisis</h2>
+		<p class="text-suave">Resultados generales del conjunto completo · {{ resumen_general.periodo }}</p>
+		<p>{{ resumen_general.respuesta }}</p>
+	</section>
+
+	<section class="seccion pt-3 pb-3" aria-labelledby="conocimientos-titulo">
+		<h2 class="h4" id="conocimientos-titulo">Conocimientos evidentes</h2>
+		<p class="text-suave">Resultados generales del conjunto completo · {{ resumen_general.periodo }}</p>
+		{% for conocimiento in resumen_general.conocimientos %}
+		<details class="border rounded-3 p-3 mb-3">
+			<summary class="h6 mb-0">{{ conocimiento.titulo }}</summary>
+			<dl class="row mt-3 mb-0">
+				<dt class="col-md-3">Pregunta</dt><dd class="col-md-9">{{ conocimiento.pregunta }}</dd>
+				<dt class="col-md-3">Variables</dt><dd class="col-md-9">{{ conocimiento.variables }}</dd>
+				<dt class="col-md-3">Procedimiento</dt><dd class="col-md-9">{{ conocimiento.procedimiento }}</dd>
+				<dt class="col-md-3">Evidencia</dt><dd class="col-md-9">{{ conocimiento.evidencia }}</dd>
+				<dt class="col-md-3">Hallazgo</dt><dd class="col-md-9">{{ conocimiento.hallazgo }}</dd>
+				<dt class="col-md-3">Interpretación</dt><dd class="col-md-9">{{ conocimiento.interpretacion }}</dd>
+				<dt class="col-md-3">Utilidad</dt><dd class="col-md-9">{{ conocimiento.utilidad }}</dd>
+				<dt class="col-md-3">Limitación</dt><dd class="col-md-9 mb-0">{{ conocimiento.limitacion }}</dd>
+			</dl>
+		</details>
+		{% endfor %}
+	</section>
+
+	<section class="seccion pt-3 pb-3" aria-labelledby="limitacion-titulo">
+		<h2 class="h4" id="limitacion-titulo">Limitación del análisis</h2>
+		<p class="text-suave">{{ resumen_general.limitacion }}</p>
+	</section>
+
+	<section class="seccion pt-3" aria-labelledby="decision-titulo">
+		<h2 class="h4" id="decision-titulo">Posible decisión sustentada en los datos</h2>
+		<p class="text-suave">{{ resumen_general.decision }}</p>
 	</section>
 </section>
 {% endblock %}
