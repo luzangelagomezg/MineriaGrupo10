@@ -530,7 +530,11 @@ def temporal():
 
 @app.route("/multivariada")
 def multivariada():
-    return render_template("multivariada.html", dim=dimension("multivariada"))
+    # Dimensión relacional y multivariada (Integrante 4): la lógica está en dimension_multivariada.py
+    from dimension_multivariada import tablero_multivariado
+
+    contexto = tablero_multivariado(request.args)
+    return render_template("multivariada.html", dim=dimension("multivariada"), **contexto)
 
 
 if __name__ == "__main__":
