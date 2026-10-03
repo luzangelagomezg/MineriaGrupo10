@@ -68,7 +68,9 @@
 					<div style="height: 20rem;">
 						<canvas id="grafica-sexo" role="img" aria-label="Gráfica de barras de víctimas registradas según sexo"></canvas>
 					</div>
-					<p class="text-suave mt-3 mb-0"><strong>Interpretación:</strong> {{ datos_graficas.sexo.interpretacion }}</p>
+					{% for parrafo in datos_graficas.sexo.interpretacion.split("\n\n") %}
+					<p class="text-suave mt-3 mb-0">{% if loop.first %}<strong>Interpretación:</strong> {% endif %}{{ parrafo }}</p>
+					{% endfor %}
 				</div>
 			</article>
 		</div>
@@ -79,7 +81,9 @@
 					<div style="height: 30rem;">
 						<canvas id="grafica-edad" role="img" aria-label="Gráfica de barras de víctimas registradas según grupo de edad"></canvas>
 					</div>
-					<p class="text-suave mt-3 mb-0"><strong>Interpretación:</strong> {{ datos_graficas.edad.interpretacion }}</p>
+					{% for parrafo in datos_graficas.edad.interpretacion.split("\n\n") %}
+					<p class="text-suave mt-3 mb-0">{% if loop.first %}<strong>Interpretación:</strong> {% endif %}{{ parrafo }}</p>
+					{% endfor %}
 				</div>
 			</article>
 		</div>
@@ -90,7 +94,9 @@
 					<div style="height: 24rem;">
 						<canvas id="grafica-ciclo-vital" role="img" aria-label="Gráfica de barras de víctimas registradas según ciclo vital"></canvas>
 					</div>
-					<p class="text-suave mt-3 mb-0"><strong>Interpretación:</strong> {{ datos_graficas.ciclo_vital.interpretacion }}</p>
+					{% for parrafo in datos_graficas.ciclo_vital.interpretacion.split("\n\n") %}
+					<p class="text-suave mt-3 mb-0">{% if loop.first %}<strong>Interpretación:</strong> {% endif %}{{ parrafo }}</p>
+					{% endfor %}
 				</div>
 			</article>
 		</div>
