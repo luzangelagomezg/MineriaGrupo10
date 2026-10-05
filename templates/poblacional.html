@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block titulo %}{{ dim.nombre }}{% endblock %}
+{% block contenido %}
+<section class="container py-4">
+	{% include "_encabezado_dimension.html" %}
+	<p class="text-suave mb-4">Este tablero presenta víctimas registradas de presuntos homicidios, no información sobre victimarios.</p>
+
+	<form method="get" action="{{ url_for('poblacional') }}" class="mb-4">
+		<div class="row g-3 align-items-end">
+			<div class="col-12 col-md-5">
+				<label for="filtro-anio" class="form-label">Año del hecho</label>
+				<select id="filtro-anio" name="anio" class="form-select">
+					<option value="Todos" {% if anio_seleccionado == "Todos" %}selected{% endif %}>Todos</option>
+					{% for anio in anios_disponibles %}
+					<option value="{{ anio }}" {% if anio_seleccionado == anio|string %}selected{% endif %}>{{ anio }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-5">
+				<label for="filtro-sexo" class="form-label">Sexo de la victima</label>
+				<select id="filtro-sexo" name="sexo" class="form-select">
+					<option value="Todos" {% if sexo_seleccionado == "Todos" %}selected{% endif %}>Todos</option>
+					{% for sexo in sexos_disponibles %}
+					<option value="{{ sexo }}" {% if sexo_seleccionado == sexo %}selected{% endif %}>{{ sexo }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-2">
+				<button type="submit" class="btn btn-neon sin-flecha w-100">Aplicar</button>
+			</div>
+		</div>
+	</form>
+
+	<section aria-label="Indicadores poblacionales" class="row g-3 mb-4">
+		<div class="col-12 col-md-4">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h6 text-suave">Total de víctimas registradas</h2>
+					<p class="display-6 fw-semibold mb-0">{{ "{:,}".format(total_registros).replace(",", ".") }}</p>
+				</div>
+			</article>
+		</div>
+		<div class="col-12 col-md-4">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h6 text-suave">Grupo de edad predominante</h2>
+					<p class="fs-3 fw-semibold mb-1">{{ grupo_edad_predominante }}</p>
+					<p class="text-suave mb-0">{{ "{:,}".format(cantidad_grupo_predominante).replace(",", ".") }} víctimas</p>
+				</div>
+			</article>
+		</div>
+		<div class="col-12 col-md-4">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h6 text-suave">Ciclo vital predominante</h2>
+					<p class="fs-5 fw-semibold mb-1">{{ ciclo_vital_predominante }}</p>
+					<p class="text-suave mb-0">{{ "{:,}".format(cantidad_ciclo_vital_predominante).replace(",", ".") }} víctimas</p>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<section aria-label="Distribuciones poblacionales" class="row g-3">
+		<div class="col-12 col-xl-6">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h5">Víctimas registradas según sexo</h2>
+					<div style="height: 20rem;">
+						<canvas id="grafica-sexo" role="img" aria-label="Gráfica de barras de víctimas registradas según sexo"></canvas>
+					</div>
+					{% for parrafo in datos_graficas.sexo.interpretacion.split("\n\n") %}
+					<p class="text-suave mt-3 mb-0">{% if loop.first %}<strong>Interpretación:</strong> {% endif %}{{ parrafo }}</p>
+					{% endfor %}
+				</div>
+			</article>
+		</div>
+		<div class="col-12 col-xl-6">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h5">Víctimas registradas según grupo de edad</h2>
+					<div style="height: 30rem;">
+						<canvas id="grafica-edad" role="img" aria-label="Gráfica de barras de víctimas registradas según grupo de edad"></canvas>
+					</div>
+					{% for parrafo in datos_graficas.edad.interpretacion.split("\n\n") %}
+					<p class="text-suave mt-3 mb-0">{% if loop.first %}<strong>Interpretación:</strong> {% endif %}{{ parrafo }}</p>
+					{% endfor %}
+				</div>
+			</article>
+		</div>
+		<div class="col-12 col-xl-6">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h5">Víctimas registradas según ciclo vital</h2>
+					<div style="height: 24rem;">
+						<canvas id="grafica-ciclo-vital" role="img" aria-label="Gráfica de barras de víctimas registradas según ciclo vital"></canvas>
+					</div>
+					{% for parrafo in datos_graficas.ciclo_vital.interpretacion.split("\n\n") %}
+					<p class="text-suave mt-3 mb-0">{% if loop.first %}<strong>Interpretación:</strong> {% endif %}{{ parrafo }}</p>
+					{% endfor %}
+				</div>
+			</article>
+		</div>
+		<div class="col-12 col-xl-6">
+			<article class="card h-100">
+				<div class="card-body">
+					<h2 class="h5">Resumen poblacional {{ resumen_general.periodo }}</h2>
+					<p class="small text-suave">Resultados generales del conjunto completo · {{ resumen_general.periodo }}. No cambia con los filtros.</p>
+
+					<div class="mb-3">
+						<div class="text-suave">Total de víctimas registradas</div>
+						<div class="display-6 fw-semibold">{{ resumen_general.total_texto }}</div>
+					</div>
+
+					<div class="row g-2 mb-3">
+						<div class="col-6">
+							<div class="border rounded-3 p-2 h-100">
+								<div class="small text-suave">Hombres</div>
+								<strong>{{ resumen_general.hombres.porcentaje_texto }} %</strong>
+							</div>
+						</div>
+						<div class="col-6">
+							<div class="border rounded-3 p-2 h-100">
+								<div class="small text-suave">Mujeres</div>
+								<strong>{{ resumen_general.mujeres.porcentaje_texto }} %</strong>
+							</div>
+						</div>
+					</div>
+
+					<p class="mb-2"><strong>Edad predominante:</strong> {{ resumen_general.edad.dominante.categoria }}<br>
+						<span class="text-suave">{{ resumen_general.edad.dominante.cantidad_texto }} víctimas · {{ resumen_general.edad.dominante.porcentaje_texto }} %</span>
+					</p>
+					<p class="mb-3"><strong>Ciclo vital predominante:</strong> {{ resumen_general.ciclo_vital.dominante.categoria }}<br>
+						<span class="text-suave">{{ resumen_general.ciclo_vital.dominante.cantidad_texto }} víctimas · {{ resumen_general.ciclo_vital.dominante.porcentaje_texto }} %</span>
+					</p>
+					<p class="mb-0">{{ resumen_general.conclusion }}</p>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<section class="seccion pb-3" aria-labelledby="variables-titulo">
+		<h2 class="h4" id="variables-titulo">Variables del análisis</h2>
+		<p class="text-suave mb-0">La composición se describe mediante {{ resumen_general.variables[0] }}, {{ resumen_general.variables[1] }} y {{ resumen_general.variables[2] }}. {{ resumen_general.variables[3] }} permite explorar subconjuntos temporales mediante el filtro.</p>
+	</section>
+
+	<section class="seccion pt-3 pb-3" aria-labelledby="respuesta-titulo">
+		<h2 class="h4" id="respuesta-titulo">Respuesta a la pregunta de análisis</h2>
+		<p class="text-suave">Resultados generales del conjunto completo · {{ resumen_general.periodo }}</p>
+		<p>{{ resumen_general.respuesta }}</p>
+	</section>
+
+	<section class="seccion pt-3 pb-3" aria-labelledby="conocimientos-titulo">
+		<h2 class="h4" id="conocimientos-titulo">Conocimientos evidentes</h2>
+		<p class="text-suave">Resultados generales del conjunto completo · {{ resumen_general.periodo }}</p>
+		{% for conocimiento in resumen_general.conocimientos %}
+		<details class="border rounded-3 p-3 mb-3">
+			<summary class="h6 mb-0">{{ conocimiento.titulo }}</summary>
+			<dl class="row mt-3 mb-0">
+				<dt class="col-md-3">Pregunta</dt><dd class="col-md-9">{{ conocimiento.pregunta }}</dd>
+				<dt class="col-md-3">Variables</dt><dd class="col-md-9">{{ conocimiento.variables }}</dd>
+				<dt class="col-md-3">Procedimiento</dt><dd class="col-md-9">{{ conocimiento.procedimiento }}</dd>
+				<dt class="col-md-3">Evidencia</dt><dd class="col-md-9">{{ conocimiento.evidencia }}</dd>
+				<dt class="col-md-3">Hallazgo</dt><dd class="col-md-9">{{ conocimiento.hallazgo }}</dd>
+				<dt class="col-md-3">Interpretación</dt><dd class="col-md-9">{{ conocimiento.interpretacion }}</dd>
+				<dt class="col-md-3">Utilidad</dt><dd class="col-md-9">{{ conocimiento.utilidad }}</dd>
+				<dt class="col-md-3">Limitación</dt><dd class="col-md-9 mb-0">{{ conocimiento.limitacion }}</dd>
+			</dl>
+		</details>
+		{% endfor %}
+	</section>
+
+	<section class="seccion pt-3 pb-3" aria-labelledby="limitacion-titulo">
+		<h2 class="h4" id="limitacion-titulo">Limitación del análisis</h2>
+		<p class="text-suave">{{ resumen_general.limitacion }}</p>
+	</section>
+
+	<section class="seccion pt-3" aria-labelledby="decision-titulo">
+		<h2 class="h4" id="decision-titulo">Posible decisión sustentada en los datos</h2>
+		<p class="text-suave">{{ resumen_general.decision }}</p>
+	</section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script id="poblacional-chart-data" type="application/json">{{ datos_graficas|tojson }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/poblacional.js') }}"></script>
+{% endblock %}

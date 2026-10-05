@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block titulo %}{{ dim.nombre }}{% endblock %}
+{% block contenido %}
+<section class="container py-4">
+	{% include "_encabezado_dimension.html" %}
+	<p class="text-suave mb-4">Este tablero cruza al mismo tiempo el sexo y el ciclo vital de la víctima con el escenario, el mecanismo, el día y la circunstancia del hecho, para encontrar perfiles que no se ven cuando cada variable se mira por separado.</p>
+
+	<!-- Variables utilizadas -->
+	<article class="card mb-4">
+		<div class="card-body">
+			<h2 class="h5"><i class="bi bi-list-columns-reverse"></i> Variables utilizadas</h2>
+			<div class="table-responsive">
+				<table class="table table-sm align-middle mb-0">
+					<thead><tr><th>Variable</th><th>Tipo</th><th>Uso en el tablero</th></tr></thead>
+					<tbody>
+						<tr><td>Sexo de la víctima</td><td>Categórica</td><td>Eje de comparación en las gráficas 1 y 2, combinaciones y casos atípicos.</td></tr>
+						<tr><td>Ciclo vital</td><td>Categórica ordinal</td><td>Gráfica 2, combinaciones y casos atípicos.</td></tr>
+						<tr><td>Escenario del hecho</td><td>Categórica (agrupada en 5)</td><td>Gráficas 1 y 2 y combinaciones.</td></tr>
+						<tr><td>Mecanismo causal de la lesión fatal</td><td>Categórica (agrupada en 6)</td><td>Gráficas 1 y 3, combinaciones y casos atípicos.</td></tr>
+						<tr><td>Día del hecho</td><td>Temporal (categórica)</td><td>Gráfica 3 y comparación fin de semana / entre semana.</td></tr>
+						<tr><td>Circunstancia del hecho</td><td>Categórica</td><td>Indicador de riñas por día.</td></tr>
+						<tr><td>Año del hecho</td><td>Temporal (numérica)</td><td>Filtro interactivo.</td></tr>
+						<tr><td>Departamento y zona del hecho</td><td>Territorial (categórica)</td><td>Filtros interactivos.</td></tr>
+					</tbody>
+				</table>
+			</div>
+			<p class="text-suave small mt-2 mb-0">Limpieza aplicada: el mecanismo venía escrito de 24 formas («Cortopunzante», «Corto punzante», «Cortante»…) y se agrupó en 6 categorías; los 72 escenarios se agruparon en 5 («Vía Pública», «Calle», «Carretera» → Vía pública; bosques, ríos y zonas agropecuarias → Espacio abierto o rural; bares, comercios, talleres, hospitales… → Establecimiento). Los días y la circunstancia se unificaron sin importar mayúsculas. Las gráficas 1 y 2 excluyen las 107 víctimas de sexo «Indeterminado» por ser muy pocas para calcular porcentajes estables.</p>
+		</div>
+	</article>
+
+	<!-- Filtros -->
+	<form method="get" action="{{ url_for('multivariada') }}" class="mb-4">
+		<div class="row g-3 align-items-end">
+			<div class="col-12 col-md-3">
+				<label for="filtro-anio" class="form-label"><i class="bi bi-calendar3"></i> Año del hecho</label>
+				<select id="filtro-anio" name="anio" class="form-select">
+					<option value="Todos" {% if anio_seleccionado == "Todos" %}selected{% endif %}>Todos</option>
+					{% for anio in anios_disponibles %}
+					<option value="{{ anio }}" {% if anio_seleccionado == anio|string %}selected{% endif %}>{{ anio }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-4">
+				<label for="filtro-departamento" class="form-label"><i class="bi bi-geo-alt"></i> Departamento</label>
+				<select id="filtro-departamento" name="departamento" class="form-select">
+					<option value="Todos" {% if departamento_seleccionado == "Todos" %}selected{% endif %}>Todo el país</option>
+					{% for depto in departamentos_disponibles %}
+					<option value="{{ depto }}" {% if departamento_seleccionado == depto %}selected{% endif %}>{{ depto }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-3">
+				<label for="filtro-zona" class="form-label"><i class="bi bi-signpost-split"></i> Zona del hecho</label>
+				<select id="filtro-zona" name="zona" class="form-select">
+					<option value="Todos" {% if zona_seleccionada == "Todos" %}selected{% endif %}>Todas</option>
+					{% for zona in zonas_disponibles %}
+					<option value="{{ zona }}" {% if zona_seleccionada == zona %}selected{% endif %}>{{ zona }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-2 d-grid gap-2">
+				<button type="submit" class="btn btn-neon sin-flecha w-100">Aplicar</button>
+				{% if hay_filtros %}<a href="{{ url_for('multivariada') }}" class="btn btn-contorno w-100">Quitar filtros</a>{% endif %}
+			</div>
+		</div>
+	</form>
+
+	{% if muestra_pequena %}
+	<div class="alert alert-warning" role="alert"><i class="bi bi-exclamation-triangle"></i> La combinación de filtros deja solo {{ indicadores.total }} registros. Los porcentajes de una muestra tan pequeña cambian mucho con un solo caso, por eso no se muestran interpretaciones ni casos atípicos.</div>
+	{% endif %}
+
+	<!-- Indicadores -->
+	<section aria-label="Indicadores multivariados" class="row g-3 mb-4">
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave"><i class="bi bi-people"></i> Víctimas analizadas</h2>
+				<p class="display-6 fw-semibold mb-1">{{ indicadores.total }}</p>
+				<p class="text-suave mb-0">Con los filtros aplicados</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave"><i class="bi bi-house-door"></i> Asesinadas en la vivienda</h2>
+				<p class="fs-3 fw-semibold mb-1">{{ indicadores.brecha_vivienda }} veces</p>
+				<p class="text-suave mb-0">Mujeres {{ indicadores.viv_mujeres }} frente a hombres {{ indicadores.viv_hombres }}</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave"><i class="bi bi-diagram-3"></i> Combinación más frecuente</h2>
+				<p class="fs-5 fw-semibold mb-1">{{ indicadores.combinacion }}</p>
+				<p class="text-suave mb-0">{{ indicadores.combinacion_casos }} víctimas ({{ indicadores.combinacion_pct }})</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave"><i class="bi bi-calendar-week"></i> Arma cortopunzante el fin de semana</h2>
+				<p class="fs-3 fw-semibold mb-1">{{ indicadores.corto_finde }}</p>
+				<p class="text-suave mb-0">Entre semana: {{ indicadores.corto_semana }} · Riñas por día: {{ indicadores.rinas_razon }} veces más</p>
+			</div></article>
+		</div>
+	</section>
+
+	<!-- Visualización 1 -->
+	<article class="card mb-4"><div class="card-body">
+		<h2 class="h5"><i class="bi bi-bar-chart-steps"></i> 1. Mecanismo de la lesión según sexo y escenario del hecho</h2>
+		<p class="text-suave small mb-2">Tres variables: cada barra es una combinación sexo × escenario y se reparte al 100 % entre los mecanismos.</p>
+		<div style="height: 26rem;">
+			<canvas id="grafica-sexo-escenario" role="img" aria-label="Barras apiladas al 100 % del mecanismo según sexo y escenario"></canvas>
+		</div>
+		<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.sexo_escenario }}</p>
+	</div></article>
+
+	<!-- Visualizaciones 2 y 3 -->
+	<section aria-label="Ciclo vital y día de la semana" class="row g-3 mb-4">
+		<div class="col-12 col-xl-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-house-heart"></i> 2. Víctimas asesinadas en la vivienda según ciclo vital y sexo</h2>
+				<p class="text-suave small mb-2">Porcentaje de las víctimas de cada grupo cuyo escenario fue la vivienda.</p>
+				<div style="height: 24rem;">
+					<canvas id="grafica-ciclo-vivienda" role="img" aria-label="Barras agrupadas del porcentaje asesinado en la vivienda por ciclo vital y sexo"></canvas>
+				</div>
+				<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.ciclo_vivienda }}</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-xl-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-calendar3-week"></i> 3. Víctimas por día de la semana y mecanismo</h2>
+				<p class="text-suave small mb-2">Cantidad de víctimas por día, separada por mecanismo de la lesión.</p>
+				<div style="height: 24rem;">
+					<canvas id="grafica-dias" role="img" aria-label="Barras apiladas de víctimas por día de la semana y mecanismo"></canvas>
+				</div>
+				<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.dias }}</p>
+			</div></article>
+		</div>
+	</section>
+
+	<!-- Combinaciones y casos atípicos -->
+	<section aria-label="Combinaciones y casos atípicos" class="row g-3 mb-4">
+		<div class="col-12 col-xl-7">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-grid-3x3-gap"></i> Las 10 combinaciones con más víctimas</h2>
+				<p class="text-suave small mb-2">Cruce de cuatro variables: sexo × ciclo vital × escenario × mecanismo.</p>
+				<div class="table-responsive">
+					<table class="table table-sm align-middle mb-0">
+						<thead><tr><th>Sexo</th><th>Ciclo vital</th><th>Escenario</th><th>Mecanismo</th><th class="text-end">Víctimas</th><th class="text-end">%</th><th class="text-end">% acum.</th></tr></thead>
+						<tbody>
+							{% for fila in combinaciones %}
+							<tr>
+								<td>{{ fila.sexo }}</td><td>{{ fila.ciclo }}</td><td>{{ fila.escenario }}</td><td>{{ fila.mecanismo }}</td>
+								<td class="text-end">{{ fila.casos }}</td><td class="text-end">{{ fila.porcentaje }}</td><td class="text-end text-suave">{{ fila.acumulado }}</td>
+							</tr>
+							{% else %}
+							<tr><td colspan="7" class="text-suave">Sin registros para estos filtros.</td></tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div></article>
+		</div>
+		<div class="col-12 col-xl-5">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-exclamation-diamond"></i> Casos inusuales</h2>
+				<p class="text-suave small mb-2">Grupos sexo × ciclo vital donde un mecanismo aparece al menos 3 veces más que en el total (mínimo 30 casos).</p>
+				<div class="table-responsive">
+					<table class="table table-sm align-middle mb-0">
+						<thead><tr><th>Grupo</th><th>Mecanismo</th><th class="text-end">Casos</th><th class="text-end">En el grupo</th><th class="text-end">En el total</th><th class="text-end">Veces</th></tr></thead>
+						<tbody>
+							{% for fila in atipicos %}
+							<tr>
+								<td>{{ fila.grupo }}</td><td>{{ fila.mecanismo }}</td><td class="text-end">{{ fila.casos }}</td>
+								<td class="text-end">{{ fila.en_grupo }}</td><td class="text-end text-suave">{{ fila.en_total }}</td>
+								<td class="text-end" style="color: var(--acento); font-weight: 600;">{{ fila.razon }}</td>
+							</tr>
+							{% else %}
+							<tr><td colspan="6" class="text-suave">No hay combinaciones atípicas con suficientes casos para estos filtros.</td></tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div></article>
+		</div>
+	</section>
+
+	<!-- Conocimientos evidentes -->
+	<h2 class="h4 mt-5 mb-1">Conocimientos evidentes</h2>
+	<p class="text-suave mb-3">Calculados sobre el total nacional, sin filtros (125.284 víctimas).</p>
+	<div class="row g-3 mb-4">
+		{% set conocimientos = [
+			{
+				"titulo": "1. Las mujeres mueren en la casa y por mecanismos de contacto",
+				"pregunta": "¿El lugar y el mecanismo del homicidio son iguales para hombres y mujeres?",
+				"variables": "Sexo de la víctima, escenario del hecho y mecanismo causal de la lesión.",
+				"procedimiento": "Se cruzaron las tres variables y se calculó, para cada combinación sexo × escenario, el porcentaje de cada mecanismo. También se comparó el porcentaje de víctimas de cada sexo asesinadas en la vivienda.",
+				"evidencia": "Gráfica 1 e indicador «Asesinadas en la vivienda».",
+				"hallazgo": "El 33,9 % de las mujeres fue asesinada en la vivienda frente al 11,4 % de los hombres (3,0 veces más). Entre los hombres asesinados en la vía pública el arma de fuego explica el 77,9 %; entre las mujeres asesinadas en la vivienda solo el 42,5 %, y suben el arma cortopunzante (28,5 %), la asfixia (14,3 %) y el mecanismo contundente (12,5 %).",
+				"interpretacion": "Hay dos perfiles distintos: el homicidio masculino es callejero y con arma de fuego; el femenino ocurre con más frecuencia en el hogar y con mecanismos que exigen cercanía con la víctima, un patrón compatible con la violencia de pareja o intrafamiliar.",
+				"utilidad": "Indica que la prevención del homicidio de mujeres no puede depender solo del control de armas de fuego y de la seguridad en la calle: requiere rutas de atención de violencia intrafamiliar.",
+				"limitacion": "El conjunto de datos no dice quién fue el agresor en la mayoría de los casos (el 52 % dice «Sin información»), así que no se puede afirmar que estos homicidios sean feminicidios o violencia de pareja."
+			},
+			{
+				"titulo": "2. Niños y adultos mayores: la vivienda y mecanismos atípicos",
+				"pregunta": "¿Cambian el escenario y el mecanismo del homicidio según la etapa de la vida y el sexo?",
+				"variables": "Ciclo vital, sexo, escenario del hecho y mecanismo causal.",
+				"procedimiento": "Se calculó el porcentaje asesinado en la vivienda por ciclo vital y sexo. Luego, en cada grupo sexo × ciclo vital, se comparó la participación de cada mecanismo con la del total (razón) y se marcaron como inusuales los que la triplican con al menos 30 casos.",
+				"evidencia": "Gráfica 2 y tabla «Casos inusuales».",
+				"hallazgo": "En la primera infancia, cerca del 60 % de las víctimas de ambos sexos murió en la vivienda y el mecanismo contundente llega al 43,2 % en niños y al 40,4 % en niñas (8 veces más que el 5,1 % general); la asfixia alcanza el 20,6 % en niñas (10 veces más). Las mujeres adultas mayores tienen el porcentaje más alto en la vivienda (63,4 %) y 17,5 % de asfixia (8,5 veces más).",
+				"interpretacion": "Las víctimas más dependientes (niños pequeños y adultas mayores) mueren sobre todo en el hogar y por mecanismos sin arma de fuego, lo que apunta a agresores del entorno cercano y a situaciones de cuidado.",
+				"utilidad": "Permite orientar la vigilancia hacia el maltrato infantil y el abuso de personas mayores, con alertas desde salud, comisarías de familia y centros de cuidado.",
+				"limitacion": "Son grupos pequeños (223 niñas y 287 niños de 0 a 5 años en diez años), por lo que sus porcentajes son menos estables que los de los adultos."
+			},
+			{
+				"titulo": "3. El domingo cambia el tipo de violencia",
+				"pregunta": "¿El mecanismo y la circunstancia del homicidio cambian según el día de la semana?",
+				"variables": "Día del hecho, mecanismo causal y circunstancia del hecho.",
+				"procedimiento": "Se contaron las víctimas por día y mecanismo, se comparó el porcentaje de arma cortopunzante entre semana y en el fin de semana, y se calcularon las riñas promedio por día en cada periodo.",
+				"evidencia": "Gráfica 3 e indicador «Arma cortopunzante el fin de semana».",
+				"hallazgo": "El domingo tiene 26.034 víctimas, 1,75 veces las del miércoles (14.898). El arma cortopunzante pasa del 14,7 % de las víctimas entre semana al 22,6 % el fin de semana y llega al 26,0 % el domingo. Las riñas promedio por día son 2,7 veces más frecuentes en sábado y domingo que entre semana.",
+				"interpretacion": "El fin de semana aparece una violencia más impulsiva —riñas y armas blancas— probablemente asociada al ocio y al consumo de alcohol, que se suma al homicidio con arma de fuego que se mantiene todos los días.",
+				"utilidad": "Sustenta reforzar los controles de porte de armas blancas, los horarios de establecimientos y la presencia policial en las noches de sábado y domingo.",
+				"limitacion": "La circunstancia está sin información en el 64,5 % de los registros, así que el conteo de riñas es un piso y no el total real; el consumo de alcohol no está registrado en los datos."
+			}
+		] %}
+		{% for c in conocimientos %}
+		<div class="col-12 col-xl-4">
+			<article class="card h-100"><div class="card-body">
+				<h3 class="h5">{{ c.titulo }}</h3>
+				<dl class="ficha small mb-0">
+					<dt>Pregunta</dt><dd>{{ c.pregunta }}</dd>
+					<dt>Variables</dt><dd>{{ c.variables }}</dd>
+					<dt>Procedimiento</dt><dd>{{ c.procedimiento }}</dd>
+					<dt>Evidencia</dt><dd>{{ c.evidencia }}</dd>
+					<dt>Hallazgo</dt><dd>{{ c.hallazgo }}</dd>
+					<dt>Interpretación</dt><dd>{{ c.interpretacion }}</dd>
+					<dt>Utilidad</dt><dd>{{ c.utilidad }}</dd>
+					<dt>Limitación</dt><dd class="mb-0">{{ c.limitacion }}</dd>
+				</dl>
+			</div></article>
+		</div>
+		{% endfor %}
+	</div>
+
+	<!-- Limitación y decisión -->
+	<div class="row g-3 mb-4">
+		<div class="col-12 col-lg-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-exclamation-triangle"></i> Limitación del análisis</h2>
+				<p class="mb-0">Los cruces muestran asociaciones entre variables, no causas. Son conteos y porcentajes de víctimas registradas por Medicina Legal: sin la población de cada grupo no se pueden calcular tasas ni decir qué grupo tiene más riesgo. Además, varias variables útiles para explicar los homicidios están muy incompletas (circunstancia: 64,5 % sin información; presunto agresor: 52 %), y la agrupación del escenario y del mecanismo en pocas categorías fue una decisión del equipo que simplifica la información original.</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-lg-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-lightbulb"></i> Decisión sustentada en los datos</h2>
+				<p class="mb-0">Diseñar la prevención por perfiles y no con una sola estrategia: (1) control de armas de fuego y presencia en la vía pública para hombres de 18 a 59 años, que en solo dos combinaciones reúnen el 40,6 % de las víctimas; (2) una ruta de alerta temprana de violencia intrafamiliar enfocada en mujeres, niños pequeños y adultas mayores, que mueren principalmente en la vivienda; y (3) controles de armas blancas y riñas concentrados en sábados y domingos.</p>
+			</div></article>
+		</div>
+	</div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script id="multivariada-chart-data" type="application/json">{{ graficas|tojson }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/multivariada.js') }}"></script>
+{% endblock %}

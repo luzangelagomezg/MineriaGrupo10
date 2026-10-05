@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block titulo %}{{ dim.nombre }}{% endblock %}
+{% block contenido %}
+<section class="container py-4">
+	{% include "_encabezado_dimension.html" %}
+	<p class="text-suave mb-4">Este tablero muestra cómo cambian en el tiempo las víctimas registradas de presuntos homicidios en Colombia entre 2015 y 2024.</p>
+
+	<!-- Variables utilizadas -->
+	<article class="card mb-4">
+		<div class="card-body">
+			<h2 class="h5"><i class="bi bi-list-columns-reverse"></i> Variables utilizadas</h2>
+			<div class="table-responsive">
+				<table class="table table-sm align-middle mb-0">
+					<thead><tr><th>Variable</th><th>Tipo</th><th>Uso en el tablero</th></tr></thead>
+					<tbody>
+						<tr><td>Año del hecho</td><td>Temporal (numérica)</td><td>Evolución anual, variación entre años y comparación de periodos.</td></tr>
+						<tr><td>Mes del hecho</td><td>Temporal (categórica)</td><td>Posibles comportamientos estacionales a lo largo del año.</td></tr>
+						<tr><td>Día del hecho</td><td>Temporal (categórica)</td><td>Distribución de los casos según el día de la semana.</td></tr>
+						<tr><td>Rango de hora del hecho (3 horas)</td><td>Temporal (categórica)</td><td>Franjas del día con más casos, cruzadas con el día de la semana.</td></tr>
+						<tr><td>Sexo de la víctima</td><td>Categórica</td><td>Filtro interactivo.</td></tr>
+						<tr><td>Departamento del hecho</td><td>Territorial (categórica)</td><td>Filtro interactivo.</td></tr>
+					</tbody>
+				</table>
+			</div>
+			<p class="text-suave small mt-2 mb-0">Limpieza aplicada: se unificaron mayúsculas y minúsculas en meses y días ("Enero" y "enero"), los formatos de las franjas horarias ("(18:00 a 20:59)" y "18:00 a 20:59") y los nombres repetidos de departamentos ("Bogotá D.C." y "Bogotá, D.C.").</p>
+		</div>
+	</article>
+
+	<!-- Filtros -->
+	<form method="get" action="{{ url_for('temporal') }}" class="mb-4">
+		<div class="row g-3 align-items-end">
+			<div class="col-12 col-md-5">
+				<label for="filtro-sexo" class="form-label">Sexo de la víctima</label>
+				<select id="filtro-sexo" name="sexo" class="form-select">
+					<option value="Todos" {% if sexo_seleccionado == "Todos" %}selected{% endif %}>Todos</option>
+					{% for sexo in sexos_disponibles %}
+					<option value="{{ sexo }}" {% if sexo_seleccionado == sexo %}selected{% endif %}>{{ sexo }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-5">
+				<label for="filtro-departamento" class="form-label">Departamento del hecho</label>
+				<select id="filtro-departamento" name="departamento" class="form-select">
+					<option value="Todos" {% if departamento_seleccionado == "Todos" %}selected{% endif %}>Todos</option>
+					{% for depto in departamentos_disponibles %}
+					<option value="{{ depto }}" {% if departamento_seleccionado == depto %}selected{% endif %}>{{ depto }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-md-2 d-grid gap-2">
+				<button type="submit" class="btn btn-neon sin-flecha w-100">Aplicar</button>
+				{% if hay_filtros %}<a href="{{ url_for('temporal') }}" class="btn btn-contorno w-100">Quitar filtros</a>{% endif %}
+			</div>
+		</div>
+	</form>
+
+	<!-- Indicadores -->
+	<section aria-label="Indicadores temporales" class="row g-3 mb-4">
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave">Total de víctimas {{ indicadores.primer_anio }}–{{ indicadores.ultimo_anio }}</h2>
+				<p class="display-6 fw-semibold mb-0">{{ indicadores.total }}</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave">Año con más víctimas</h2>
+				<p class="fs-3 fw-semibold mb-1">{{ indicadores.anio_max or "Sin datos" }}</p>
+				<p class="text-suave mb-0">{{ indicadores.anio_max_casos }} víctimas · menor: {{ indicadores.anio_min or "—" }} ({{ indicadores.anio_min_casos }})</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave">Variación {{ indicadores.primer_anio }} → {{ indicadores.ultimo_anio }}</h2>
+				<p class="fs-3 fw-semibold mb-1">{{ "+" if indicadores.variacion_total > 0 else "" }}{{ indicadores.variacion_total|string|replace(".", ",") }} %</p>
+				<p class="text-suave mb-0">Cambio entre el primer y el último año</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-md-6 col-xl-3">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h6 text-suave">Mes con más víctimas</h2>
+				<p class="fs-3 fw-semibold mb-1">{{ indicadores.mes_max }}</p>
+				<p class="text-suave mb-0">{{ indicadores.mes_max_casos }} víctimas (suma de todos los años)</p>
+			</div></article>
+		</div>
+	</section>
+
+	<!-- Visualización 1: evolución anual -->
+	<section aria-label="Evolución anual" class="row g-3 mb-4">
+		<div class="col-12 col-xl-8">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5">1. Evolución anual de víctimas</h2>
+				<div style="height: 22rem;">
+					<canvas id="grafica-anual" role="img" aria-label="Gráfica de línea de víctimas por año"></canvas>
+				</div>
+				<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.anual }}</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-xl-4">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5">Aumentos y disminuciones</h2>
+				<table class="table table-sm mb-0">
+					<thead><tr><th>Año</th><th class="text-end">Víctimas</th><th class="text-end">Vs. año anterior</th></tr></thead>
+					<tbody>
+						{% for fila in tabla_anios %}
+						<tr>
+							<td>{{ fila.anio }}</td>
+							<td class="text-end">{{ fila.casos }}</td>
+							<td class="text-end">
+								{% if fila.variacion is none %}—
+								{% elif fila.variacion > 0 %}<span style="color: var(--acento)"><i class="bi bi-arrow-up-short"></i>+{{ fila.variacion|string|replace(".", ",") }} %</span>
+								{% else %}<span style="color: #ff6b8b"><i class="bi bi-arrow-down-short"></i>{{ fila.variacion|string|replace(".", ",") }} %</span>
+								{% endif %}
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div></article>
+		</div>
+	</section>
+
+	<!-- Visualización 2: meses -->
+	<section aria-label="Distribución mensual" class="row g-3 mb-4">
+		<div class="col-12 col-xl-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5">2. Víctimas por mes (suma 2015–2024)</h2>
+				<div style="height: 22rem;">
+					<canvas id="grafica-mensual" role="img" aria-label="Gráfica de barras de víctimas por mes"></canvas>
+				</div>
+				<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.mensual }}</p>
+			</div></article>
+		</div>
+		<!-- Visualización 3: días -->
+		<div class="col-12 col-xl-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5">3. Víctimas por día de la semana</h2>
+				<div style="height: 22rem;">
+					<canvas id="grafica-semanal" role="img" aria-label="Gráfica de barras de víctimas por día de la semana"></canvas>
+				</div>
+				<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.semanal }}</p>
+			</div></article>
+		</div>
+	</section>
+
+	<!-- Visualización 4: mapa de calor -->
+	<article class="card mb-4"><div class="card-body">
+		<h2 class="h5">4. Mapa de calor: día de la semana × franja horaria</h2>
+		<p class="text-suave small">Solo incluye los registros que tienen hora del hecho. Entre más intenso el color, más víctimas.</p>
+		<div class="table-responsive">
+			<table class="table table-sm text-center align-middle mb-0 mapa-calor">
+				<thead>
+					<tr><th class="text-start">Día</th>{% for franja in franjas %}<th class="small">{{ franja }}</th>{% endfor %}</tr>
+				</thead>
+				<tbody>
+					{% for fila in mapa_calor %}
+					<tr>
+						<th class="text-start">{{ fila.dia }}</th>
+						{% for celda in fila.celdas %}
+						<td style="background: rgba(25, 242, 140, {{ 0.08 + celda.intensidad * 0.82 }}); color: {{ '#05060f' if celda.intensidad > 0.55 else 'var(--texto)' }};">{{ celda.valor }}</td>
+						{% endfor %}
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		<p class="mt-3 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.horario }}</p>
+	</div></article>
+
+	<!-- Comparación entre periodos -->
+	<article class="card mb-4"><div class="card-body">
+		<h2 class="h5">Comparación entre periodos</h2>
+		<div class="row g-3 text-center my-1">
+			<div class="col-6 col-md-4"><p class="text-suave mb-1">Promedio anual {{ periodos.etiqueta_1 }}</p><p class="fs-3 fw-semibold mb-0">{{ periodos.promedio_1 }}</p></div>
+			<div class="col-6 col-md-4"><p class="text-suave mb-1">Promedio anual {{ periodos.etiqueta_2 }}</p><p class="fs-3 fw-semibold mb-0">{{ periodos.promedio_2 }}</p></div>
+			<div class="col-12 col-md-4"><p class="text-suave mb-1">Cambio</p><p class="fs-3 fw-semibold mb-0">{{ "+" if periodos.cambio > 0 else "" }}{{ periodos.cambio|string|replace(".", ",") }} %</p></div>
+		</div>
+		<p class="mt-2 mb-0"><strong>Interpretación:</strong> {{ interpretaciones.periodos }}</p>
+	</div></article>
+
+	<!-- Conocimientos evidentes -->
+	<h2 class="h4 mt-5 mb-1">Conocimientos evidentes</h2>
+	<p class="text-suave mb-3">Calculados sobre el total nacional, sin filtros (125.284 víctimas).</p>
+	<div class="row g-3 mb-4">
+		{% set conocimientos = [
+			{
+				"titulo": "1. Los homicidios aumentaron a partir de 2021",
+				"pregunta": "¿Cómo cambió la cantidad de víctimas entre 2015 y 2024?",
+				"variables": "Año del hecho.",
+				"procedimiento": "Se contaron las víctimas por año, se calculó la variación porcentual frente al año anterior y se comparó el promedio anual de 2015–2019 con el de 2020–2024.",
+				"evidencia": "Gráfica 1, tabla de aumentos y disminuciones y comparación entre periodos.",
+				"hallazgo": "Entre 2015 y 2020 los casos se mantuvieron estables (entre 11.326 y 12.130 por año). 2020 fue el año más bajo (11.326), en 2021 hubo el mayor salto (+16,9 %) y el máximo llegó en 2023 (14.260). El promedio anual pasó de 11.700 (2015–2019) a 13.357 (2020–2024), un aumento del 14,2 %. De 2015 a 2024 el aumento fue del 21 %.",
+				"interpretacion": "La violencia homicida no disminuyó en el periodo: tuvo una caída puntual en 2020, que coincide con los confinamientos por la pandemia, y después subió a un nivel más alto que se mantuvo hasta 2024.",
+				"utilidad": "Sirve para mostrar que las estrategias de prevención deben reforzarse desde 2021 y para medir si las acciones de años siguientes logran volver al nivel previo.",
+				"limitacion": "Los datos solo muestran cuántos casos hubo; no explican por qué aumentaron. La relación con la pandemia es una coincidencia en el tiempo, no una causa comprobada."
+			},
+			{
+				"titulo": "2. Diciembre es el mes más violento del año",
+				"pregunta": "¿Existe un comportamiento repetitivo o estacional según el mes?",
+				"variables": "Mes del hecho (y año para el promedio diario).",
+				"procedimiento": "Se unificaron los nombres de los meses, se sumaron las víctimas de cada mes en los 10 años y se calculó el promedio de víctimas por día en cada mes para corregir que febrero tiene menos días.",
+				"evidencia": "Gráfica 2 e indicador «Mes con más víctimas».",
+				"hallazgo": "Diciembre reúne 11.783 víctimas (9,4 % del total) y febrero 9.322 (7,5 %). Incluso ajustando por los días del mes, diciembre promedia 38 víctimas por día, frente a 33 de febrero. Enero también está entre los meses más altos (10.746).",
+				"interpretacion": "La temporada de fin y comienzo de año (diciembre y enero) concentra más homicidios, lo que sugiere un patrón estacional asociado a festividades, vacaciones y mayor consumo de alcohol.",
+				"utilidad": "Permite planear con anticipación campañas de prevención y mayor presencia de autoridades en diciembre y enero.",
+				"limitacion": "Hay 234 registros sin mes. Además, el conjunto de datos no incluye variables sobre consumo de alcohol o festividades, así que esa explicación es una hipótesis."
+			},
+			{
+				"titulo": "3. Los fines de semana y las noches concentran los casos",
+				"pregunta": "¿En qué días y horas se presentan más homicidios?",
+				"variables": "Día del hecho y Rango de hora del hecho (3 horas).",
+				"procedimiento": "Se unificaron los formatos de días y franjas horarias, se contaron las víctimas por día de la semana y se cruzó el día con la franja horaria en un mapa de calor (solo con registros que tienen hora).",
+				"evidencia": "Gráfica 3 y mapa de calor (visualización 4).",
+				"hallazgo": "El domingo es el día con más víctimas (26.034; 20,8 %), 1,75 veces más que el miércoles, el día más bajo (14.898). Sábado y domingo reúnen el 36,9 % de los casos aunque son el 28,6 % de la semana. De los casos con hora conocida, el 42,5 % ocurrió entre las 18:00 y las 23:59.",
+				"interpretacion": "El riesgo de homicidio no se distribuye igual en la semana: aumenta en las noches y en los fines de semana, cuando hay más actividad social y nocturna.",
+				"utilidad": "Ayuda a decidir en qué días y horarios reforzar patrullajes, controles y servicios de atención de urgencias.",
+				"limitacion": "El 59 % de los registros no tiene hora del hecho, por lo que el patrón horario solo describe al 41 % restante."
+			}
+		] %}
+		{% for c in conocimientos %}
+		<div class="col-12 col-xl-4">
+			<article class="card h-100"><div class="card-body">
+				<h3 class="h5">{{ c.titulo }}</h3>
+				<dl class="ficha small mb-0">
+					<dt>Pregunta</dt><dd>{{ c.pregunta }}</dd>
+					<dt>Variables</dt><dd>{{ c.variables }}</dd>
+					<dt>Procedimiento</dt><dd>{{ c.procedimiento }}</dd>
+					<dt>Evidencia</dt><dd>{{ c.evidencia }}</dd>
+					<dt>Hallazgo</dt><dd>{{ c.hallazgo }}</dd>
+					<dt>Interpretación</dt><dd>{{ c.interpretacion }}</dd>
+					<dt>Utilidad</dt><dd>{{ c.utilidad }}</dd>
+					<dt>Limitación</dt><dd class="mb-0">{{ c.limitacion }}</dd>
+				</dl>
+			</div></article>
+		</div>
+		{% endfor %}
+	</div>
+
+	<!-- Limitación y decisión -->
+	<div class="row g-3 mb-4">
+		<div class="col-12 col-lg-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-exclamation-triangle"></i> Limitación del análisis</h2>
+				<p class="mb-0">La hora del hecho falta en el 59 % de los registros y el problema empeora con el tiempo: pasó del 43,8 % sin hora en 2015 al 73,6 % en 2024. Por eso los patrones horarios de los años recientes son menos confiables. Además, las cifras corresponden a <em>presuntos</em> homicidios registrados por Medicina Legal, y los últimos años pueden actualizarse.</p>
+			</div></article>
+		</div>
+		<div class="col-12 col-lg-6">
+			<article class="card h-100"><div class="card-body">
+				<h2 class="h5"><i class="bi bi-lightbulb"></i> Decisión sustentada en los datos</h2>
+				<p class="mb-0">Concentrar los recursos de prevención (patrullajes, controles y campañas) en las noches de viernes a domingo, entre las 18:00 y las 23:59, y reforzarlos en diciembre y enero, que son los periodos con más víctimas. También se recomienda exigir el registro obligatorio de la hora del hecho, para que este análisis sea más preciso en el futuro.</p>
+			</div></article>
+		</div>
+	</div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script id="temporal-chart-data" type="application/json">{{ graficas|tojson }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/temporal.js') }}"></script>
+{% endblock %}
