@@ -388,6 +388,7 @@ DIMENSIONES = [
         "nombre": "Dimensión poblacional",
         "icono": "bi-people-fill",
         "integrante": 1,
+        "estudiante": "Luz Angela Gomez Galindo",
         "pregunta": "¿Cómo está compuesta y distribuida la población analizada según sus principales características?",
     },
     {
@@ -395,6 +396,7 @@ DIMENSIONES = [
         "nombre": "Dimensión territorial",
         "icono": "bi-geo-alt-fill",
         "integrante": 2,
+        "estudiante": "David Santiago Torres Higuera",
         "pregunta": "¿Cómo se distribuye la población y sus principales características entre los territorios disponibles?",
     },
     {
@@ -402,6 +404,7 @@ DIMENSIONES = [
         "nombre": "Dimensión temporal",
         "icono": "bi-graph-up-arrow",
         "integrante": 3,
+        "estudiante": "Michael Mateo Melgarejo Uribe",
         "pregunta": "¿Cómo ha cambiado el comportamiento de la población durante el periodo disponible?",
     },
     {
@@ -409,6 +412,7 @@ DIMENSIONES = [
         "nombre": "Dimensión relacional y multivariada",
         "icono": "bi-diagram-3-fill",
         "integrante": 4,
+        "estudiante": "David Santiago Romero Hidalgo",
         "pregunta": "¿Qué diferencias o relaciones evidentes pueden identificarse al analizar conjuntamente tres o más variables?",
     },
 ]
